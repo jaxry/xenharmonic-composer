@@ -15,6 +15,7 @@ export function renderUI() {
   )
 }
 
+// example of how to load audio samples
 // fetch(new Request('./harp.wav'))
 //   .then(response => response.arrayBuffer())
 //   .then(buffer => musicPlayer.loadSample(buffer))

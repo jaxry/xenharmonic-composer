@@ -56,7 +56,6 @@ export default class Interval {
       }
     }
 
-
     this.twoPower = -Math.floor(Math.log2(numerator / denominator))
     if (this.twoPower >= 0) {
       numerator *= 2 ** Math.abs(this.twoPower)
