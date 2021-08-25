@@ -1,0 +1,19 @@
+.primary {
+  color: var(--primary)
+}
+
+.secondary {
+  color: var(--secondary)
+}
+
+.warning {
+  color: var(--warning)
+}
+
+.selected, .selected:hover {
+  background: var(--selected) !important
+}
+
+.relative {
+  position: relative;
+}

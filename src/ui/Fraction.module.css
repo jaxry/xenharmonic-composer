@@ -1,0 +1,9 @@
+.container {
+  display: inline-flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.denominator {
+  border-top: 2px solid;
+}

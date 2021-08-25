@@ -1,0 +1,17 @@
+.equation {
+  display: flex;
+  align-items: center;
+  height: 4rem;
+}
+
+.sign {
+  margin: 0 0.5rem;
+}
+
+.power {
+  align-self: flex-start;
+}
+
+.fraction {
+  margin-right: 1rem;
+}

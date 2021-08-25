@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  align-items: flex-start;
+}
+
+.tabs {
+  background: #333;
+}
+
+.tab {
+  padding: 1rem;
+  user-select: none;
+  cursor: pointer;
+}
+
+.tab:hover {
+  background: var(--hover);
+}
+
+.selected {
+  background: hsl(var(--primaryHue), var(--primarySat), 40%) !important;
+}
+
+.content {
+  padding: 1rem;
+}

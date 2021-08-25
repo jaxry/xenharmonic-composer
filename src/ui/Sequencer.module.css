@@ -1,0 +1,60 @@
+.section {
+  display: inline-block;
+  position: relative;
+}
+
+.tracks {
+  display: flex;
+  height: 100%;
+  margin-left: 5rem;
+  gap: 0.5rem;
+  --border: 1px solid var(--borderColor);
+}
+
+.track {
+  position: relative;
+  min-width: 8rem;
+}
+
+.chain {
+  position: absolute;
+  width: 100%;
+  border: var(--border);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  white-space: nowrap;
+  font-weight: bold;
+  user-select: none;
+  cursor: pointer;
+  border-bottom: var(--border);
+}
+
+.block:last-child {
+  border-bottom: none;
+}
+
+.block:hover {
+  background: var(--hover);
+}
+
+.block:active {
+  background: var(--active);
+}
+
+.modulations {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.modulation {
+  position: absolute;
+  border-top: 2px solid var(--primary);
+  width: 100%;
+}
