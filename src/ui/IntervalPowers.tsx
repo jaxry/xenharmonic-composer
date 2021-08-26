@@ -1,6 +1,6 @@
 import React, { useReducer } from 'react'
-import { musicPlayer } from '..'
 import Interval from '../Interval'
+import { playInterval } from '../play'
 import common from './common.module.css'
 import Fraction from './Fraction'
 import style from './IntervalPowers.module.css'
@@ -27,7 +27,7 @@ export default function IntervalEditorPowers(props: Props) {
 
   const changePower = (index: number, value: number) => {
     interval.set(index, value)
-    musicPlayer.playInterval(interval)
+    playInterval(interval)
     onChange(interval)
   }
 

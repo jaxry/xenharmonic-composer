@@ -1,14 +1,15 @@
-import { musicPlayer } from '..'
 import Interval from '../Interval'
 import addBlock from '../operations/addBlock'
 import Pitch from '../Pitch'
 import Section from './Section'
 import Modulations from './Modulations'
+import { playSection } from '../play'
 
 export default class Composition {
   intervals: Interval[] = []
   rootSection = new Section()
   modulations = new Modulations()
+  globalTempoScale = 0.5
 
   constructor() {
     this.intervals.push(
@@ -44,7 +45,7 @@ export default class Composition {
   }
 
   play() {
-    musicPlayer.playSection(this.rootSection, this.modulations)
+    playSection(this.rootSection, this)
   }
 
   addInterval() {

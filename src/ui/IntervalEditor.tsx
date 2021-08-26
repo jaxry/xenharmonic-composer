@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { musicPlayer } from '..'
 import Composition from '../composition/Composition'
 import Interval from '../Interval'
 import { cls } from '../util'
@@ -7,6 +6,7 @@ import style from './IntervalEditor.module.css'
 import IntervalEditorPowers from './IntervalPowers'
 import common from './common.module.css'
 import useRerender from './hooks/useRerender'
+import { playInterval } from '../play'
 
 export default function IntervalEditor(props: { composition: Composition }) {
   const { composition } = props
@@ -23,7 +23,7 @@ export default function IntervalEditor(props: { composition: Composition }) {
 
   const select = (interval: Interval) => {
     return () => {
-      musicPlayer.playInterval(interval)
+      playInterval(interval)
       setSelectedInterval(interval)
     }
   }

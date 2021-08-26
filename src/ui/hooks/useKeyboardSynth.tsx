@@ -1,9 +1,9 @@
 
 import { useCallback, useState } from 'react'
-import { musicPlayer } from '../..'
 import InstrumentPlayer from '../../InstrumentPlayer'
 import Interval from '../../Interval'
 import { keyboardToPitch } from '../../keyboardToPitch'
+import { playLivePitch } from '../../play'
 import useKeyPress from './useKeyPress'
 
 const playingSamples: Record<string, InstrumentPlayer> = {}
@@ -18,7 +18,7 @@ export function useKeyboardSynth(intervals: Interval[]) {
       }
       const pitch = keyboardToPitch(intervals, e.code)
       if (pitch) {
-        playingSamples[e.code] = musicPlayer.playLivePitch(pitch, keyboardModulation)
+        playingSamples[e.code] = playLivePitch(pitch, keyboardModulation)
       }
   
       e.preventDefault()

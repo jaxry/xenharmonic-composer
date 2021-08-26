@@ -1,10 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
-import MusicPlayer from './MusicPlayer'
 import App from './ui/App'
 
-export const musicPlayer = new MusicPlayer()
+export const audioCtx = new AudioContext()
 
 export function renderUI() {
   ReactDOM.render(

@@ -1,10 +1,10 @@
 import { Instrument } from './Instrument'
+import { audioCtx } from '.'
 
 const decayScale = 5
 const attackScale = 3
 
 export default class InstrumentPlayer {
-  ctx: AudioContext
   instrument: Instrument
   startTime: number
   private src: AudioBufferSourceNode
@@ -13,31 +13,29 @@ export default class InstrumentPlayer {
   private panner: StereoPannerNode
   private prevPlayback = 0
 
-  constructor(ctx: AudioContext, out: AudioNode, instrument: Instrument, startTime = ctx.currentTime) {
-    this.ctx = ctx
-
+  constructor(out: AudioNode, instrument: Instrument, startTime = audioCtx.currentTime) {
     this.instrument = instrument
 
     this.startTime = startTime
 
-    this.src = ctx.createBufferSource()
+    this.src = audioCtx.createBufferSource()
     this.src.buffer = instrument.buffer
     this.src.loop = true
 
-    this.panner = ctx.createStereoPanner()
+    this.panner = audioCtx.createStereoPanner()
   
-    this.gain = ctx.createGain()
+    this.gain = audioCtx.createGain()
     this.gain.gain.value = 0
     this.src.connect(this.gain).connect(this.panner).connect(out)
   
-    this.vibrato = ctx.createOscillator()
+    this.vibrato = audioCtx.createOscillator()
     // this.vibrato.frequency.value = instrument.vibratoFreq
-    // const vibratoGain = ctx.createGain()
+    // const vibratoGain = audioCtx.createGain()
     // vibratoGain.gain.value = instrument.vibratoAmp
     // this.vibrato.connect(vibratoGain).connect(this.panner.pan)
   }
 
-  start(time = this.ctx.currentTime - this.startTime) {
+  start(time = audioCtx.currentTime - this.startTime) {
     time += this.startTime
     this.src.start(time)
     this.vibrato.start(time)
@@ -45,7 +43,7 @@ export default class InstrumentPlayer {
     return this
   }
 
-  play(playbackMultiplier: number, time = this.ctx.currentTime - this.startTime) {
+  play(playbackMultiplier: number, time = audioCtx.currentTime - this.startTime) {
     time += this.startTime
     // if (!this.prevPlayback) {
       this.src.playbackRate.setValueAtTime(playbackMultiplier, time)
@@ -65,14 +63,14 @@ export default class InstrumentPlayer {
     return this
   }
 
-  release(time = this.ctx.currentTime - this.startTime) {
+  release(time = audioCtx.currentTime - this.startTime) {
     time += this.startTime
     this.gain.gain.setTargetAtTime(0, time, this.instrument.release)
 
     return this
   }
 
-  stop(time = this.ctx.currentTime - this.startTime) {
+  stop(time = audioCtx.currentTime - this.startTime) {
     this.release(time)
 
     time += this.startTime

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { musicPlayer } from '..'
 import sequencerKeyBinds from './sequencerKeyBinds'
 import Composition from '../composition/Composition'
 import Section from '../composition/Section'
@@ -13,6 +12,7 @@ import useKeyPress from './hooks/useKeyPress'
 import style from './Sequencer.module.css'
 import { drillIntoSection, globalPosition, initialState, SequencerState, setSelected } from './SequencerState'
 import { isSection } from '../composition/BlockLocation'
+import { playFreq } from '../play'
 
 export default function Sequencer(props: { composition: Composition }) {
   const { composition } = props
@@ -37,7 +37,7 @@ export default function Sequencer(props: { composition: Composition }) {
     if (elem instanceof Pitch) {
       const freq = elem.ratio * modulation
       if (elem !== prevPitch.current) {
-        musicPlayer.playFreq(freq)
+        playFreq(freq)
       }
       prevPitch.current = elem
     }
@@ -115,8 +115,8 @@ export default function Sequencer(props: { composition: Composition }) {
       </div>
 
       <div className={style.modulations}>
-        {mapIter(modulations.modulationsBetween(beginning, beginning + node.durationScale * section.duration), (m, i) => {
-          const position = (m.position - beginning) / node.durationScale
+        {mapIter(modulations.modulationsBetween(beginning, beginning + node.tempo * section.duration), (m, i) => {
+          const position = (m.position - beginning) / node.tempo
           return <div key={i} className={style.modulation} style={{top: `${blockHeight * position}rem`}}>
             {m.interval.numerator} / {m.interval.denominator}
           </div>

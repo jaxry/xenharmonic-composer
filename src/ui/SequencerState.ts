@@ -10,7 +10,7 @@ export interface SectionNode {
   parentSection?: Section
   section: Section
   beginning: number
-  durationScale: number
+  tempo: number
 }
 
 export interface SequencerState {
@@ -23,7 +23,7 @@ export function initialState(composition: Composition): SequencerState {
     sectionStack: [{
       section: composition.rootSection,
       beginning: 0,
-      durationScale: 1
+      tempo: 1
     }],
     selectedLocation: null,
   }
@@ -64,8 +64,8 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
         parentBlock: block,
         parentSection: location.section,
         section,
-        beginning: prev.beginning + prev.durationScale * location.beginning,
-        durationScale: prev.durationScale * block.duration.quotient
+        beginning: prev.beginning + prev.tempo * location.beginning,
+        tempo: prev.tempo * block.duration.quotient
       },
     ],
     selectedLocation: firstBlock(section)
@@ -74,5 +74,5 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
 
 export function globalPosition(state: SequencerState) {
   const sectionInfo = last(state.sectionStack)
-  return sectionInfo.beginning + state.selectedLocation!.beginning * sectionInfo.durationScale
+  return sectionInfo.beginning + state.selectedLocation!.beginning * sectionInfo.tempo
 }
