@@ -31,7 +31,7 @@ export default function sequencerKeyBinds(props: Props): SequencerState {
 
   const pitch = keyboardToPitch(composition.intervals, e.code)
 
-  if (pitch && !e.ctrlKey) {
+  if (pitch && !e.altKey && !e.ctrlKey) {
     if (e.shiftKey) {
       return setSelected(state, addBlock(selectedLocation, pitch))
     } else {
@@ -69,13 +69,16 @@ function singleKeyBinds(props: Props): Record<string, () => SequencerState> {
     'Space': () => {
       return setSelected(state, addBlock(selectedLocation))
     },
-    'Backspace': () => {
+    'Backslash': () => {
       if (e.shiftKey) {
         clearModulation(globalPosition(state), composition.modulations)
       } else {
         changePitch(selectedLocation.block)
       }
       return {...state}
+    },
+    'Backspace': () => {
+      return setSelected(state, deleteBlock(selectedLocation))
     },
     'ArrowUp': () => {
       return setSelected(state, verticalSelection(selectedLocation, -1))
@@ -84,14 +87,14 @@ function singleKeyBinds(props: Props): Record<string, () => SequencerState> {
       return setSelected(state, verticalSelection(selectedLocation, 1))
     },
     'ArrowRight': () => {
-      if (e.ctrlKey) {
+      if (e.altKey) {
         return setSelected(state, shiftChain(selectedLocation, 1))
       } else {
         return setSelected(state, horizontalSelection(selectedLocation, 1))
       }
     },
     'ArrowLeft': () => {
-      if (e.ctrlKey) {
+      if (e.altKey) {
         return setSelected(state, shiftChain(selectedLocation, -1))
       } else {
         return setSelected(state, horizontalSelection(selectedLocation, -1))
@@ -113,20 +116,17 @@ function singleKeyBinds(props: Props): Record<string, () => SequencerState> {
       }
       return {...state}
     },
-    'Delete': () => {
-      return setSelected(state, deleteBlock(selectedLocation))
-    },
     'Backquote': () => {
       return setSelected(state, resetDuration(selectedLocation))
     },
     'KeyT': () => {
-      if (e.ctrlKey) {
+      if (e.altKey) {
         return setSelected(state, newChain(selectedLocation))
       }
       return state
     },
     'KeyW': () => {
-      if (e.ctrlKey) {
+      if (e.altKey) {
         newSection(selectedLocation)
         return drillIntoSection(state, selectedLocation as BlockLocationWithSection)
       }

@@ -53,8 +53,6 @@ export default function Sequencer(props: { composition: Composition }) {
     })
 
     setState(newState)
-
-    e.preventDefault()
   }, undefined, selectedLocation !== null)
 
   const sequencerRef = useRef<HTMLDivElement>(null)
