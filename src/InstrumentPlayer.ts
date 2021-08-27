@@ -6,17 +6,15 @@ const attackScale = 3
 
 export default class InstrumentPlayer {
   instrument: Instrument
-  startTime: number
+
   private src: AudioBufferSourceNode
   private gain: GainNode
-  private vibrato: OscillatorNode
+  // private vibrato: OscillatorNode
   private panner: StereoPannerNode
   private prevPlayback = 0
 
-  constructor(out: AudioNode, instrument: Instrument, startTime = audioCtx.currentTime) {
+  constructor(out: AudioNode, instrument: Instrument) {
     this.instrument = instrument
-
-    this.startTime = startTime
 
     this.src = audioCtx.createBufferSource()
     this.src.buffer = instrument.buffer
@@ -28,23 +26,23 @@ export default class InstrumentPlayer {
     this.gain.gain.value = 0
     this.src.connect(this.gain).connect(this.panner).connect(out)
   
-    this.vibrato = audioCtx.createOscillator()
+    // this.vibrato = audioCtx.createOscillator()
     // this.vibrato.frequency.value = instrument.vibratoFreq
     // const vibratoGain = audioCtx.createGain()
     // vibratoGain.gain.value = instrument.vibratoAmp
     // this.vibrato.connect(vibratoGain).connect(this.panner.pan)
   }
 
-  start(time = audioCtx.currentTime - this.startTime) {
-    time += this.startTime
+  start(timeOffset = 0, time = audioCtx.currentTime) {
+    time += timeOffset
     this.src.start(time)
-    this.vibrato.start(time)
+    // this.vibrato.start(time)
 
     return this
   }
 
-  play(playbackMultiplier: number, time = audioCtx.currentTime - this.startTime) {
-    time += this.startTime
+  play(playbackMultiplier = 1, timeOffset = 0, time = audioCtx.currentTime) {
+    time += timeOffset
     // if (!this.prevPlayback) {
       this.src.playbackRate.setValueAtTime(playbackMultiplier, time)
     // } else {
@@ -63,19 +61,16 @@ export default class InstrumentPlayer {
     return this
   }
 
-  release(time = audioCtx.currentTime - this.startTime) {
-    time += this.startTime
-    this.gain.gain.setTargetAtTime(0, time, this.instrument.release)
+  release(timeOffset = 0, time = audioCtx.currentTime) {
+    this.gain.gain.setTargetAtTime(0, time + timeOffset, this.instrument.release)
 
     return this
   }
 
-  stop(time = audioCtx.currentTime - this.startTime) {
-    this.release(time)
-
-    time += this.startTime
-    this.src.stop(time + decayScale * this.instrument.release)
-    this.vibrato.stop(time + decayScale * this.instrument.release)
+  stop(timeOffset = 0, time = audioCtx.currentTime) {
+    this.release(timeOffset, time)
+    this.src.stop(time + timeOffset + decayScale * this.instrument.release)
+    // this.vibrato.stop(time + timeOffset + decayScale * this.instrument.release)
 
     return this
   }

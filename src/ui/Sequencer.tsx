@@ -46,12 +46,7 @@ export default function Sequencer(props: { composition: Composition }) {
   }
 
   useKeyPress((e) => {
-    const newState = sequencerKeyBinds({
-      e,
-      composition,
-      state
-    })
-
+    const newState = sequencerKeyBinds(e, composition, state)
     setState(newState)
   }, undefined, selectedLocation !== null)
 

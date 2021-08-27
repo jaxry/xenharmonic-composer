@@ -15,14 +15,11 @@ import scaleDuration from '../operations/scaleDuration'
 import newSection from '../operations/newSection'
 import { drillIntoSection, globalPosition, leaveSection, SequencerState, setSelected } from './SequencerState'
 
-type Props = {
-  e: KeyboardEvent,
-  composition: Composition,
-  state: SequencerState
-}
 
-export default function sequencerKeyBinds(props: Props): SequencerState {
-  const  { e, composition, state} = props
+type Params = [KeyboardEvent, Composition, SequencerState]
+
+export default function sequencerKeyBinds(...params: Params): SequencerState {
+  const  [ e, composition, state ] = params
   const selectedLocation = state.selectedLocation
 
   if (selectedLocation === null) {
@@ -42,7 +39,7 @@ export default function sequencerKeyBinds(props: Props): SequencerState {
     const digit = parseInt(e.code[5])
     return setSelected(state, scaleDuration(selectedLocation, digit, e.shiftKey))
   } else {
-    const binds = singleKeyBinds(props)
+    const binds = singleKeyBinds(...params)
     if (binds[e.code]) {
       return binds[e.code]()
     } 
@@ -51,8 +48,8 @@ export default function sequencerKeyBinds(props: Props): SequencerState {
   return state
 }
 
-function singleKeyBinds(props: Props): Record<string, () => SequencerState> {
-  const { e, state, composition } = props
+function singleKeyBinds(...props: Params): Record<string, () => SequencerState> {
+  const [ e, composition, state ] = props
   const selectedLocation = state.selectedLocation!
   const block = selectedLocation.block
 
