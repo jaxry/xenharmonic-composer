@@ -22,9 +22,9 @@ export default function Sequencer(props: { composition: Composition }) {
 
   const { sectionStack, selectedLocation } = state
 
-  const node = last(sectionStack)
-  const section = node.section
-  const beginning = node.beginning
+  const active = last(sectionStack)
+  const section = active.section
+  const beginning = active.beginning
 
   const prevPitch = useRef<Pitch>()
 
@@ -48,6 +48,7 @@ export default function Sequencer(props: { composition: Composition }) {
   useKeyPress((e) => {
     const newState = sequencerKeyBinds(e, composition, state)
     setState(newState)
+    e.preventDefault()
   }, undefined, selectedLocation !== null)
 
   const sequencerRef = useRef<HTMLDivElement>(null)
@@ -110,16 +111,16 @@ export default function Sequencer(props: { composition: Composition }) {
       </div>
 
       <div className={style.modulations}>
-        {mapIter(modulations.modulationsBetween(beginning, beginning + node.tempo * section.duration), (m, i) => {
-          const position = (m.position - beginning) / node.tempo
+        {mapIter(modulations.modulationsBetween(beginning, beginning + active.tempo * section.duration), (m, i) => {
+          const position = (m.position - beginning) / active.tempo
           return <div key={i} className={style.modulation} style={{top: `${blockHeight * position}rem`}}>
             {m.interval.numerator} / {m.interval.denominator}
           </div>
         })}
       </div>
     </div>
-    <div>
+    {/* <div>
       <button className={common.primary} onClick={() => composition.play()}>Play</button>
-    </div>
+    </div> */}
   </div>
 }

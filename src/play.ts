@@ -9,15 +9,11 @@ import Composition from "./composition/Composition"
 import Chain from "./composition/Chain"
 import { applyModulation } from "./composition/Modulations"
 
-function makeOutput(gain = 0.1) {
+function makeOutput(gain = 1) {
   const out = audioCtx.createGain()
-  out.gain.value = gain
+  out.gain.value = 0.1 * gain
   out.connect(audioCtx.destination)
   return out
-}
-
-export function getInstrument() {
-  return new InstrumentPlayer(makeOutput(), new Instrument(squareWave))
 }
 
 export function playFreq(freq: number) {
@@ -43,39 +39,59 @@ export function playLivePitch(pitch: Pitch, modulation = 1) {
   return player
 }
 
-export function playSection(section: Section, composition: Composition, startTime = audioCtx.currentTime + 0.1, sectionBeginning = 0,  tempo = 1) {
+type PlayProps = {
+  composition: Composition,
+  startTime: number,
+  sectionBeginning: number,
+  modulationOffset: number,
+  tempo: number,
+  output: AudioNode
+}
+
+export function playSection(section: Section, props: PlayProps) {
   for (const chain of section.chains()) {
-    playChain(chain, composition, startTime, sectionBeginning, tempo)
+    playChain(chain, props)
   }
 }
 
-export function playChain(chain: Chain, composition: Composition, startTime: number, sectionBeginning: number, tempo: number) {  
-  const { modulations, globalTempoScale } = composition
+export function playChain(chain: Chain, props: PlayProps) {  
+  const { modulations, globalTempoScale } = props.composition
   const instrument = new Instrument(squareWave)
-  const player = new InstrumentPlayer(makeOutput(), instrument)
+  const player = new InstrumentPlayer(props.output, instrument)
 
   let nextModulationIndex = 0
   let nextModulation = modulations.list[nextModulationIndex]
   let modulation = 1
 
-  player.start(globalTempoScale * (sectionBeginning + chain.beginning * tempo), startTime)
-  player.stop(globalTempoScale * (sectionBeginning + chain.end * tempo), startTime)
+  const chainGlobalStart = props.sectionBeginning + chain.beginning * props.tempo
+  const chainGlobalEnd =  props.sectionBeginning + chain.end * props.tempo
+
+  player.start(globalTempoScale * chainGlobalStart, props.startTime)
+  player.stop(globalTempoScale * chainGlobalEnd, props.startTime)
 
   for (const [block, blockBeginning] of chain.blockPositions()) {
-    const blockGlobalBeginning = sectionBeginning + blockBeginning * tempo
+    const blockGlobalBeginning = props.sectionBeginning + blockBeginning * props.tempo
 
-    while (blockGlobalBeginning >= nextModulation?.position) {
+    while (blockGlobalBeginning + props.modulationOffset >= nextModulation?.position) {
       modulation = applyModulation(modulation, nextModulation)
       nextModulation = modulations.list[++nextModulationIndex]
     }
 
     if (block.element instanceof Pitch) {
-      player.play(modulation * block.element.ratio, globalTempoScale * blockGlobalBeginning, startTime)
+      player.play(
+        modulation * block.element.ratio, 
+        globalTempoScale * blockGlobalBeginning, 
+        props.startTime
+      )
     } else {
-      player.release(globalTempoScale * blockGlobalBeginning, startTime)
+      player.release(globalTempoScale * blockGlobalBeginning, props.startTime)
 
       if (block.element instanceof Section) {
-        playSection(block.element, composition, startTime, blockGlobalBeginning, tempo * block.duration.quotient)
+        playSection(block.element, {
+          ...props, 
+          sectionBeginning: blockGlobalBeginning,
+          tempo: props.tempo * block.duration.quotient
+        })
       }
     }
   }

@@ -14,7 +14,7 @@ import { keyboardToPitch } from '../keyboardToPitch'
 import scaleDuration from '../operations/scaleDuration'
 import newSection from '../operations/newSection'
 import { drillIntoSection, globalPosition, leaveSection, SequencerState, setSelected } from './SequencerState'
-
+import { last } from '../util'
 
 type Params = [KeyboardEvent, Composition, SequencerState]
 
@@ -57,7 +57,7 @@ function singleKeyBinds(...props: Params): Record<string, () => SequencerState> 
     'Escape': () => {
       return leaveSection(state)
     },
-    'Enter': () => {
+    'Tab': () => {
       if (isSection(selectedLocation)) {
         return drillIntoSection(state, selectedLocation)
       }
@@ -84,14 +84,14 @@ function singleKeyBinds(...props: Params): Record<string, () => SequencerState> 
       return setSelected(state, verticalSelection(selectedLocation, 1))
     },
     'ArrowRight': () => {
-      if (e.altKey) {
+      if (e.shiftKey) {
         return setSelected(state, shiftChain(selectedLocation, 1))
       } else {
         return setSelected(state, horizontalSelection(selectedLocation, 1))
       }
     },
     'ArrowLeft': () => {
-      if (e.altKey) {
+      if (e.shiftKey) {
         return setSelected(state, shiftChain(selectedLocation, -1))
       } else {
         return setSelected(state, horizontalSelection(selectedLocation, -1))
@@ -127,6 +127,11 @@ function singleKeyBinds(...props: Params): Record<string, () => SequencerState> 
         newSection(selectedLocation)
         return drillIntoSection(state, selectedLocation as BlockLocationWithSection)
       }
+      return state
+    },
+    'Enter': () => {
+      const active = last(state.sectionStack)
+      composition.play(active.section, active.beginning, active.tempo)
       return state
     }
   }

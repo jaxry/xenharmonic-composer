@@ -4,12 +4,15 @@ import Pitch from '../Pitch'
 import Section from './Section'
 import Modulations from './Modulations'
 import { playSection } from '../play'
+import { audioCtx } from '..'
 
 export default class Composition {
   intervals: Interval[] = []
   rootSection = new Section()
   modulations = new Modulations()
   globalTempoScale = 0.5
+
+  private playingOutput?: GainNode
 
   constructor() {
     this.intervals.push(
@@ -35,17 +38,21 @@ export default class Composition {
     this.sortIntervals()
 
     this.rootSection.name = 'Main'
-    let block = this.rootSection.findBlock(this.rootSection.tracks[0].chains[0].blocks[0])!
-    block = addBlock(block, new Pitch(this.intervals[0]))
-    const child = new Section()
-    block = addBlock(block, child)
-    child.containedIn.push(this.rootSection)
-    addBlock(block, new Pitch(this.intervals[2]))
-
   }
 
-  play() {
-    playSection(this.rootSection, this)
+  play(section: Section, beginning: number, tempo: number) {
+    this.playingOutput?.disconnect()
+    this.playingOutput = audioCtx.createGain()
+    this.playingOutput.gain.value = 0.1
+    this.playingOutput.connect(audioCtx.destination)
+    playSection(section, {
+      composition: this,
+      startTime: audioCtx.currentTime,
+      sectionBeginning: 0,
+      modulationOffset: beginning,
+      tempo,
+      output: this.playingOutput
+    })
   }
 
   addInterval() {
