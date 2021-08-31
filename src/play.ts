@@ -11,7 +11,7 @@ import { applyModulation } from "./composition/Modulations"
 
 function makeOutput(gain = 1) {
   const out = audioCtx.createGain()
-  out.gain.value = 0.1 * gain
+  out.gain.value = 0.2 * gain
   out.connect(audioCtx.destination)
   return out
 }

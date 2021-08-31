@@ -1,6 +1,4 @@
 import Interval from '../Interval'
-import addBlock from '../operations/addBlock'
-import Pitch from '../Pitch'
 import Section from './Section'
 import Modulations from './Modulations'
 import { playSection } from '../play'
@@ -43,7 +41,7 @@ export default class Composition {
   play(section: Section, beginning: number, tempo: number) {
     this.playingOutput?.disconnect()
     this.playingOutput = audioCtx.createGain()
-    this.playingOutput.gain.value = 0.1
+    this.playingOutput.gain.value = 0.2
     this.playingOutput.connect(audioCtx.destination)
     playSection(section, {
       composition: this,

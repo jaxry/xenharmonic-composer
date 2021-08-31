@@ -36,20 +36,6 @@ export function setSelected(state: SequencerState, location: BlockLocation | nul
   }
 }
 
-export function leaveSection(state: SequencerState): SequencerState {
-  const poppedNode = last(state.sectionStack)
-
-  if (!poppedNode.parentSection) {
-    return state
-  }
-
-  return {
-    ...state,
-    sectionStack: state.sectionStack.slice(0, state.sectionStack.length - 1),
-    selectedLocation: poppedNode.parentSection.findBlock(poppedNode.parentBlock!)!
-  }
-}
-
 export function drillIntoSection(state: SequencerState, location: BlockLocationWithSection): SequencerState {
   const block = location.block
   const section = block.element
@@ -69,6 +55,20 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
       },
     ],
     selectedLocation: firstBlock(section)
+  }
+}
+
+export function leaveSection(state: SequencerState): SequencerState {
+  const poppedNode = last(state.sectionStack)
+
+  if (!poppedNode.parentSection) {
+    return state
+  }
+
+  return {
+    ...state,
+    sectionStack: state.sectionStack.slice(0, state.sectionStack.length - 1),
+    selectedLocation: poppedNode.parentSection.findBlock(poppedNode.parentBlock!)!
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import sequencerKeyBinds from './sequencerKeyBinds'
 import Composition from '../composition/Composition'
 import Section from '../composition/Section'
@@ -13,6 +13,8 @@ import style from './Sequencer.module.css'
 import { drillIntoSection, globalPosition, initialState, SequencerState, setSelected } from './SequencerState'
 import { isSection } from '../composition/BlockLocation'
 import { playFreq } from '../play'
+import shiftPitch from '../operations/shiftPitch'
+import useWheel from './hooks/useWheel'
 
 export default function Sequencer(props: { composition: Composition }) {
   const { composition } = props
@@ -50,6 +52,14 @@ export default function Sequencer(props: { composition: Composition }) {
     setState(newState)
     e.preventDefault()
   }, undefined, selectedLocation !== null)
+
+  const onWheel = useWheel((delta) => {
+    if (!selectedLocation) {
+      return
+    }
+    shiftPitch(selectedLocation?.block, composition.intervals, delta)
+    setState({...state})
+  })
 
   const sequencerRef = useRef<HTMLDivElement>(null)
   useClickOutside(sequencerRef, (e) => {
@@ -99,9 +109,8 @@ export default function Sequencer(props: { composition: Composition }) {
     return blocks
   }
 
-  return <div className={style.sequencer}>  
+  return <div className={style.sequencer} onWheel={onWheel}>  
     <div className={style.section} ref={sequencerRef} style={{height: `${section.duration * blockHeight}rem`}}>
-
       <div className={style.tracks}>
         {section.tracks.map((track, trackIndex) => {
           return <div key={trackIndex} className={style.track}>

@@ -15,6 +15,7 @@ import scaleDuration from '../operations/scaleDuration'
 import newSection from '../operations/newSection'
 import { drillIntoSection, globalPosition, leaveSection, SequencerState, setSelected } from './SequencerState'
 import { last } from '../util'
+import { playFreq } from '../play'
 
 type Params = [KeyboardEvent, Composition, SequencerState]
 
@@ -99,7 +100,10 @@ function singleKeyBinds(...props: Params): Record<string, () => SequencerState> 
     },
     'Equal': () => {
       if (e.shiftKey) {
+        const pos = globalPosition(state)
         shiftModulation(globalPosition(state), composition.modulations, composition.intervals, 1)
+        playFreq(composition.modulations.totalModulationAtPosition(pos))
+
       } else if (block.element instanceof Pitch) {
         shiftPitch(block, composition.intervals, 1)
       }
@@ -107,7 +111,9 @@ function singleKeyBinds(...props: Params): Record<string, () => SequencerState> 
     },
     'Minus': () => {
       if (e.shiftKey) {
-        shiftModulation(globalPosition(state), composition.modulations, composition.intervals, -1)
+        const pos = globalPosition(state)
+        shiftModulation(pos, composition.modulations, composition.intervals, -1)
+        playFreq(composition.modulations.totalModulationAtPosition(pos))
       } else if (block.element instanceof Pitch) {
         shiftPitch(block, composition.intervals, -1)
       }
