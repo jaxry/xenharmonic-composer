@@ -1,5 +1,5 @@
 import Block from '../composition/Block'
-import { BlockLocation, BlockLocationWithSection } from '../composition/BlockLocation'
+import { BlockLocation, BlockLocationWithSection, isSection } from '../composition/BlockLocation'
 import Composition from '../composition/Composition'
 import { firstBlock } from '../composition/find'
 import Section from '../composition/Section'
@@ -72,7 +72,20 @@ export function leaveSection(state: SequencerState): SequencerState {
   }
 }
 
+export function selectBlock(state: SequencerState, block: Block): SequencerState {
+  const loc = activeSection(state).findBlock(block)!
+  if (loc.block === state.selectedLocation?.block && isSection(loc)) {
+    return drillIntoSection(state, loc)
+  } else {
+    return setSelected(state, loc)
+  }
+}
+
 export function globalPosition(state: SequencerState) {
   const sectionInfo = last(state.sectionStack)
   return sectionInfo.beginning + state.selectedLocation!.beginning * sectionInfo.tempo
+}
+
+export function activeSection(state: SequencerState) {
+  return last(state.sectionStack).section
 }

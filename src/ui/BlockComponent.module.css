@@ -1,0 +1,23 @@
+.block {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  white-space: nowrap;
+  font-weight: bold;
+  user-select: none;
+  cursor: pointer;
+  border-bottom: var(--border);
+}
+
+.block:last-child {
+  border-bottom: none;
+}
+
+.block:hover {
+  background: var(--hover);
+}
+
+.block:active {
+  background: var(--active);
+}

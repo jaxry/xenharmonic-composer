@@ -1,20 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
 import sequencerKeyBinds from './sequencerKeyBinds'
 import Composition from '../composition/Composition'
-import Section from '../composition/Section'
 import Track from "../composition/Track"
 import Pitch from '../Pitch'
-import { cls, last, mapIter } from '../util'
-import common from './common.module.css'
-import Fraction from './Fraction'
+import { last, mapIter } from '../util'
 import useClickOutside from './hooks/useClickOutside'
 import useKeyPress from './hooks/useKeyPress'
 import style from './Sequencer.module.css'
-import { drillIntoSection, globalPosition, initialState, SequencerState, setSelected } from './SequencerState'
-import { isSection } from '../composition/BlockLocation'
+import { globalPosition, initialState, selectBlock, SequencerState, setSelected } from './SequencerState'
 import { playFreq } from '../play'
 import shiftPitch from '../operations/shiftPitch'
 import useWheel from './hooks/useWheel'
+import BlockComponent from './BlockComponent'
 
 export default function Sequencer(props: { composition: Composition }) {
   const { composition } = props
@@ -25,8 +22,7 @@ export default function Sequencer(props: { composition: Composition }) {
   const { sectionStack, selectedLocation } = state
 
   const active = last(sectionStack)
-  const section = active.section
-  const beginning = active.beginning
+  const { section, beginning } = active
 
   const prevPitch = useRef<Pitch>()
 
@@ -73,40 +69,21 @@ export default function Sequencer(props: { composition: Composition }) {
   }, [selectedLocation])
 
   const renderTrack = (track: Track) => {
-    const blocks: JSX.Element[] = []
+    return track.chains.map(chain => {
+      return  <div key={chain.id} className={style.chain} style={{top: `${chain.beginning * blockHeight}rem`}}>
+      {chain.blocks.map(block => {
+          const isSelected = (selectedLocation && block === selectedLocation.block) || false
 
-    for (const chain of track.chains) {
-      blocks.push(
-        <div key={chain.id} className={style.chain} style={{top: `${chain.beginning * blockHeight}rem`}}>
-          {chain.blocks.map(block => {
-              const isSelected = selectedLocation && block === selectedLocation.block
-
-              const props = {
-                key: block.id,
-                ref: isSelected ? editingBlockRef : undefined,
-                className: cls(style.block, isSelected && common.selected),
-                onClick: () => {
-                  const loc = section.findBlock(block)!
-                  if (loc.block === selectedLocation?.block && isSection(loc)) {
-                    setState(drillIntoSection(state, loc))
-                  } else {
-                    setState(setSelected(state, loc))
-                  }
-                },
-                style: {height: `${blockHeight * block.computedDuration}rem`}
-              }
-
-              return <div {...props}>
-                {block.element instanceof Pitch && `${block.element.octave}, ${block.element.interval.toString()}`}
-                {block.element instanceof Section && block.element.name}
-                <Fraction numerator={block.duration.numerator} denominator={block.duration.denominator} />
-              </div>
-          })}
-        </div>
-      )
-    }
-
-    return blocks
+          return <BlockComponent 
+            block={block} 
+            blockHeight={blockHeight} 
+            isSelected={isSelected} 
+            onClick={() => setState(selectBlock(state, block))} 
+            ref={isSelected ? editingBlockRef : undefined}
+          />
+      })}
+    </div>
+    })
   }
 
   return <div className={style.sequencer} onWheel={onWheel}>  

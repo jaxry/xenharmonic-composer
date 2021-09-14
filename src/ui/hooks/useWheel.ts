@@ -9,7 +9,7 @@ export default function useWheel(callback: (delta: 1 | -1) => void) {
       wheelDelta.current += Math.abs(e.deltaY)
       if (wheelDelta.current > 4) {
         wheelDelta.current = 0
-        callback(Math.sign(e.deltaY) as 1 | -1)
+        callback(-Math.sign(e.deltaY) as 1 | -1)
       }
   }
 }
