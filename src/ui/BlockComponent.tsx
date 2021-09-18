@@ -1,4 +1,4 @@
-import React, { MouseEventHandler } from 'react'
+import React from 'react'
 import Block from '../composition/Block'
 import { cls } from '../util'
 import style from './BlockComponent.module.css'
@@ -11,7 +11,7 @@ type Props = {
   block: Block,
   blockHeight: number,
   isSelected: boolean,
-  onClick: MouseEventHandler
+  onClick: React.MouseEventHandler
 }
 
 export default React.forwardRef<HTMLDivElement, Props>((props, ref) => {

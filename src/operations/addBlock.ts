@@ -11,9 +11,12 @@ export default function addBlock(location: BlockLocation, element?: Pitch | Sect
 
   if (element) {
     newBlock.element = element
-  } else if (block.element) {
+  } else if (block.element instanceof Pitch) {
     newBlock.element = copy(block.element)
+  } else {
+    newBlock.element = block.element
   }
+  
   newBlock.duration.numerator = block.duration.numerator
   newBlock.duration.denominator = block.duration.denominator
 

@@ -12,6 +12,7 @@ import { playFreq } from '../play'
 import shiftPitch from '../operations/shiftPitch'
 import useWheel from './hooks/useWheel'
 import BlockComponent from './BlockComponent'
+import SectionName from './SectionName'
 
 export default function Sequencer(props: { composition: Composition }) {
   const { composition } = props
@@ -46,8 +47,7 @@ export default function Sequencer(props: { composition: Composition }) {
   useKeyPress((e) => {
     const newState = sequencerKeyBinds(e, composition, state)
     setState(newState)
-    e.preventDefault()
-  }, undefined, selectedLocation !== null)
+  }, undefined)
 
   const onWheel = useWheel((delta) => {
     if (!selectedLocation) {
@@ -74,7 +74,8 @@ export default function Sequencer(props: { composition: Composition }) {
       {chain.blocks.map(block => {
           const isSelected = (selectedLocation && block === selectedLocation.block) || false
 
-          return <BlockComponent 
+          return <BlockComponent
+            key={block.id}
             block={block} 
             blockHeight={blockHeight} 
             isSelected={isSelected} 
@@ -86,7 +87,8 @@ export default function Sequencer(props: { composition: Composition }) {
     })
   }
 
-  return <div className={style.sequencer} onWheel={onWheel}>  
+  return <div className={style.sequencer} onWheel={onWheel}>
+    <SectionName section={section} />
     <div className={style.section} ref={sequencerRef} style={{height: `${section.duration * blockHeight}rem`}}>
       <div className={style.tracks}>
         {section.tracks.map((track, trackIndex) => {

@@ -38,7 +38,7 @@ export default class Track {
 
   doesChainFit(chain: Chain) {
     for (const other of this.chains) {
-      if (!(other === chain) && chain.end >= other.beginning && chain.beginning <= other.end) {
+      if (other !== chain && chain.end >= other.beginning && chain.beginning <= other.end) {
         return false
       }
     }

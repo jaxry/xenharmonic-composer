@@ -23,7 +23,9 @@ export default function sequencerKeyBinds(...params: Params): SequencerState {
   const  [ e, composition, state ] = params
   const selectedLocation = state.selectedLocation
 
-  if (selectedLocation === null) {
+  if (e.code === 'Escape') {
+    return leaveSection(state)
+  } else if (selectedLocation === null) {
     return state
   }
 
@@ -40,7 +42,7 @@ export default function sequencerKeyBinds(...params: Params): SequencerState {
     const digit = parseInt(e.code[5])
     return setSelected(state, scaleDuration(selectedLocation, digit, e.shiftKey))
   } else {
-    const binds = singleKeyBinds(...params)
+    const binds = selectedBlockBinds(...params)
     if (binds[e.code]) {
       return binds[e.code]()
     } 
@@ -49,15 +51,12 @@ export default function sequencerKeyBinds(...params: Params): SequencerState {
   return state
 }
 
-function singleKeyBinds(...props: Params): Record<string, () => SequencerState> {
+function selectedBlockBinds(...props: Params): Record<string, () => SequencerState> {
   const [ e, composition, state ] = props
   const selectedLocation = state.selectedLocation!
   const block = selectedLocation.block
 
   return {
-    'Escape': () => {
-      return leaveSection(state)
-    },
     'Tab': () => {
       if (isSection(selectedLocation)) {
         return drillIntoSection(state, selectedLocation)
@@ -101,7 +100,7 @@ function singleKeyBinds(...props: Params): Record<string, () => SequencerState> 
     'Equal': () => {
       if (e.shiftKey) {
         const pos = globalPosition(state)
-        shiftModulation(globalPosition(state), composition.modulations, composition.intervals, 1)
+        shiftModulation(pos, composition.modulations, composition.intervals, 1)
         playFreq(composition.modulations.totalModulationAtPosition(pos))
 
       } else if (block.element instanceof Pitch) {
