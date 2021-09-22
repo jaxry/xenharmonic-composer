@@ -14,6 +14,18 @@ export function randomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
 }
 
+export function sortByProp<T>(array: T[], prop: keyof T) {
+  array.sort((a, b) => {
+    if (a[prop] < b[prop]) {
+      return -1
+    } else if (a[prop] > b[prop]) {
+      return 1
+    } else {
+      return 0
+    }
+  })
+}
+
 export function swap(obj: Record<any, any>, i: number, j: number) {
   const t = obj[i]
   obj[i] = obj[j]
@@ -36,7 +48,7 @@ export function isEqual<T extends Record<any, any>>(a: T, b: T): boolean {
   return true
 }
 
-export function copy<T>(source: T) {
+export function copy<T>(source: T): T {
   const copy = Object.create(Object.getPrototypeOf(source))
   Object.assign(copy, source)
   return copy
@@ -86,7 +98,7 @@ export function throttle<T>(fn: (...args: T[]) => void): (...args: T[]) => void 
   }
 }
 
-export function cls(...styles: Array<any>) {
+export function cls(...styles: Array<any>): string {
   let str = ''
   for (const style of styles) {
     if (typeof style === 'string') {

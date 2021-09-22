@@ -129,7 +129,7 @@ function selectedBlockBinds(...props: Params): Record<string, () => SequencerSta
     },
     'KeyW': () => {
       if (e.altKey) {
-        newSection(selectedLocation)
+        newSection(composition, selectedLocation)
         return drillIntoSection(state, selectedLocation as BlockLocationWithSection)
       }
       return state

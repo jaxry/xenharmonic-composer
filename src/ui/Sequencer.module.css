@@ -4,7 +4,7 @@
 }
 
 .tracks {
-  display: flex;
+  display: inline-flex;
   height: 100%;
   margin-left: 5rem;
   gap: 0.5rem;

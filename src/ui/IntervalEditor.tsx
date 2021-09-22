@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Composition from '../composition/Composition'
 import Interval from '../Interval'
 import { cls } from '../util'

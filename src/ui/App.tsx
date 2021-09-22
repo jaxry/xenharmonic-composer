@@ -1,4 +1,3 @@
-import React from 'react'
 import Composition from '../composition/Composition'
 import style from './App.module.css'
 import IntervalEditor from './IntervalEditor'

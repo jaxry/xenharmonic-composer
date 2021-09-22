@@ -1,7 +1,10 @@
 import { BlockLocation } from '../composition/BlockLocation'
+import Composition from '../composition/Composition'
 import Section from '../composition/Section'
 
-export default function newSection(location: BlockLocation) {
+export default function newSection(composition: Composition, location: BlockLocation) {
   const newSection = new Section('New Section', location.section)
+  composition.sections.push(newSection)
+  composition.sortSections()
   location.block.element = newSection
 }

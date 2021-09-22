@@ -35,7 +35,7 @@ export default class Fraction {
     if (this.denominator > 1) {
       return `${this.numerator} / ${this.denominator}`
     } else {
-      return this.numerator
+      return this.numerator.toString()
     }
   }
 }

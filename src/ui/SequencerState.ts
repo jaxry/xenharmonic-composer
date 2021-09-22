@@ -16,6 +16,8 @@ export interface SectionNode {
 export interface SequencerState {
   sectionStack: SectionNode[],
   selectedLocation: BlockLocation | null
+  showSectionSelect: boolean
+  sectionSearch: string
 }
 
 export function initialState(composition: Composition): SequencerState {
@@ -26,6 +28,8 @@ export function initialState(composition: Composition): SequencerState {
       tempo: 1
     }],
     selectedLocation: null,
+    showSectionSelect: false,
+    sectionSearch: ''
   }
 }
 

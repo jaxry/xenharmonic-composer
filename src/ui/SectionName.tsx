@@ -1,15 +1,17 @@
+import { ChangeEventHandler } from 'react'
+import Composition from '../composition/Composition'
 import Section from '../composition/Section'
 import useRerender from './hooks/useRerender'
 import style from './SectionName.module.css'
 
-
-export default function SectionName(props: {section: Section}) {
+export default function SectionName(props: {composition: Composition, section: Section}) {
   const { section } = props
 
-   const rerender = useRerender()
+  const rerender = useRerender()
     
-  const onSectionNameChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+  const onSectionNameChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     section.name = event.target.value
+    props.composition.sortSections()
     rerender()
   }
   

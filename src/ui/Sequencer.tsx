@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import sequencerKeyBinds from './sequencerKeyBinds'
 import Composition from '../composition/Composition'
 import Track from "../composition/Track"
@@ -20,34 +20,22 @@ export default function Sequencer(props: { composition: Composition }) {
 
   const [state, _setState] = useState<SequencerState>(initialState(composition))
 
-  const { sectionStack, selectedLocation } = state
-
-  const active = last(sectionStack)
-  const { section, beginning } = active
-
-  const prevPitch = useRef<Pitch>()
+  const previewPitch = usePreviewPitch(composition)
 
   const setState = (newState: SequencerState) => {
-    const modulation = newState.selectedLocation ? 
-      modulations.totalModulationAtPosition(globalPosition(newState)) : 
-      1
-
-    const elem = newState.selectedLocation?.block.element
-    if (elem instanceof Pitch) {
-      const freq = elem.ratio * modulation
-      if (elem !== prevPitch.current) {
-        playFreq(freq)
-      }
-      prevPitch.current = elem
-    }
-
+    previewPitch(newState)
     _setState(newState)
   }
+
+  const { selectedLocation } = state
+
+  const active = last(state.sectionStack)
+  const { section, beginning } = active
 
   useKeyPress((e) => {
     const newState = sequencerKeyBinds(e, composition, state)
     setState(newState)
-  }, undefined)
+  }, undefined, !state.showSectionSelect)
 
   const onWheel = useWheel((delta) => {
     if (!selectedLocation) {
@@ -72,25 +60,24 @@ export default function Sequencer(props: { composition: Composition }) {
     return track.chains.map(chain => {
       return  <div key={chain.id} className={style.chain} style={{top: `${chain.beginning * blockHeight}rem`}}>
       {chain.blocks.map(block => {
-          const isSelected = (selectedLocation && block === selectedLocation.block) || false
-
-          return <BlockComponent
-            key={block.id}
-            block={block} 
-            blockHeight={blockHeight} 
-            isSelected={isSelected} 
-            onClick={() => setState(selectBlock(state, block))} 
-            ref={isSelected ? editingBlockRef : undefined}
-          />
+        const isSelected = (selectedLocation && block === selectedLocation.block) || false
+        return <BlockComponent
+          key={block.id}
+          block={block} 
+          blockHeight={blockHeight} 
+          isSelected={isSelected} 
+          onClick={() => setState(selectBlock(state, block))} 
+          ref={isSelected ? editingBlockRef : undefined}
+        />
       })}
     </div>
     })
   }
 
   return <div className={style.sequencer} onWheel={onWheel}>
-    <SectionName section={section} />
-    <div className={style.section} ref={sequencerRef} style={{height: `${section.duration * blockHeight}rem`}}>
-      <div className={style.tracks}>
+    <SectionName composition={composition} section={section} />
+    <div className={style.section} style={{height: `${section.duration * blockHeight}rem`}}>
+      <div className={style.tracks} ref={sequencerRef}>
         {section.tracks.map((track, trackIndex) => {
           return <div key={trackIndex} className={style.track}>
             {renderTrack(track)}
@@ -111,4 +98,21 @@ export default function Sequencer(props: { composition: Composition }) {
       <button className={common.primary} onClick={() => composition.play()}>Play</button>
     </div> */}
   </div>
+}
+
+function usePreviewPitch(composition: Composition) {
+  const prevPitch = useRef<Pitch>()
+
+  return (newState: SequencerState) => {
+    const elem = newState.selectedLocation?.block.element
+    if (elem instanceof Pitch) {
+      const modulation = composition.modulations.totalModulationAtPosition(globalPosition(newState))
+
+      const freq = elem.ratio * modulation
+      if (elem !== prevPitch.current) {
+        playFreq(freq)
+      }
+      prevPitch.current = elem
+    }
+  }
 }

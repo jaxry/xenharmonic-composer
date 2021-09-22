@@ -1,4 +1,3 @@
-import React from 'react'
 import style from './Fraction.module.css'
 
 export default function Fraction(props: { numerator: number, denominator: number }) {

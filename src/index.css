@@ -24,7 +24,7 @@
 
   --warningHue: 10;
   --warningSat: 80%;
-  --warning: hsl(var(var(--warningHue)), var(--warningSat), 75%);
+  --warning: hsl(var(--warningHue), var(--warningSat), 75%);
 
   --hover: #484848;
   --active: #666;

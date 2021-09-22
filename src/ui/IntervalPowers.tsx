@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react'
+import { Fragment, useReducer } from 'react'
 import Interval from '../Interval'
 import { playInterval } from '../play'
 import common from './common.module.css'
@@ -42,11 +42,11 @@ export default function IntervalEditorPowers(props: Props) {
       <span className={style.power}>{interval.twoPower}</span>
       <span className={style.sign}>×</span>
       {interval.powers.map((x, i) => {
-        return <React.Fragment key={i}>
+        return <Fragment key={i}>
           {(i > 0) && <span className={style.sign}>×</span>}
           <span className={style.prime}>{Interval.primes[i]}</span>
           <input className={style.power} type='number' value={x} onChange={(e) => changePower(i, parseInt(e.target.value))}/>
-        </React.Fragment>
+        </Fragment>
       })}
       <span className={style.sign}>=</span>
       <span className={style.fraction}><Fraction numerator={interval.numerator} denominator={interval.denominator} /></span>

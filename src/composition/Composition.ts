@@ -3,11 +3,13 @@ import Section from './Section'
 import Modulations from './Modulations'
 import { playSection } from '../play'
 import { audioCtx } from '..'
+import { sortByProp } from '../util'
 
 export default class Composition {
   intervals: Interval[] = []
   rootSection = new Section()
   modulations = new Modulations()
+  sections: Section[] = []
   globalTempoScale = 0.5
 
   private playingOutput?: GainNode
@@ -27,8 +29,6 @@ export default class Composition {
       new Interval(-2),
       new Interval(2, 1),
       new Interval(-2, -1),
-      new Interval(2, -1),
-      new Interval(-2, 1),
       new Interval(0, 0, 1),
       new Interval(0, 0, -1)
     )
@@ -62,6 +62,10 @@ export default class Composition {
 
   sortIntervals() {
     this.intervals.sort((a, b) => a.quotient - b.quotient)
+  }
+
+  sortSections() {
+    sortByProp(this.sections, 'name')
   }
 
   deleteInterval(interval: Interval) {

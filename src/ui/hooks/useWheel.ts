@@ -1,11 +1,11 @@
-import React, { useRef } from "react"
+import { useRef, WheelEvent } from "react"
 
 // slow down wheel events on track pad.
 // each movement on a trackpad gives a deltaY of 1,
 // each movement of a wheel gives a deltaY of > 4
 export default function useWheel(callback: (delta: 1 | -1) => void) {
   const wheelDelta = useRef(0)
-  return (e: React.WheelEvent) => {
+  return (e: WheelEvent) => {
       wheelDelta.current += Math.abs(e.deltaY)
       if (wheelDelta.current > 4) {
         wheelDelta.current = 0

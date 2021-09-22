@@ -1,20 +1,19 @@
-import React from 'react'
+import { forwardRef, MouseEventHandler } from 'react'
 import Block from '../composition/Block'
 import { cls } from '../util'
 import style from './BlockComponent.module.css'
 import common from './common.module.css'
 import Pitch from '../Pitch'
 import Section from '../composition/Section'
-import Fraction from './Fraction'
 
 type Props = {
   block: Block,
   blockHeight: number,
   isSelected: boolean,
-  onClick: React.MouseEventHandler
+  onClick: MouseEventHandler
 }
 
-export default React.forwardRef<HTMLDivElement, Props>((props, ref) => {
+export default forwardRef<HTMLDivElement, Props>((props, ref) => {
   const { block } = props
 
   const divProps = {
@@ -26,8 +25,8 @@ export default React.forwardRef<HTMLDivElement, Props>((props, ref) => {
   }
 
   return <div {...divProps}>
-    {block.element instanceof Pitch && `${block.element.octave}, ${block.element.interval.toString()}`}
+    {block.element instanceof Pitch && `${block.element.octave} . ${block.element.interval.toString()}`}
     {block.element instanceof Section && block.element.name}
-    <Fraction numerator={block.duration.numerator} denominator={block.duration.denominator} />
+    <div>{block.duration.toString()}</div>
   </div>
 })
