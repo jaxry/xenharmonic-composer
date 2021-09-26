@@ -4,9 +4,11 @@ import Section from './Section'
 
 let nextBlockId = 1
 
+export type BlockElement = Pitch | Section | null
+
 export default class Block {
   id = nextBlockId++
-  element?: Pitch | Section | null = null
+  element: BlockElement = null
   duration: Fraction
 
   constructor(duration = new Fraction(1)) {

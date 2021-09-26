@@ -1,7 +1,7 @@
 import Pitch from '../Pitch'
 import Composition from '../composition/Composition'
 import shiftPitch from '../operations/shiftPitch'
-import changePitch from '../operations/changePitch'
+import changeBlockElement from '../operations/changeBlockElement'
 import resetDuration from '../operations/resetDuration'
 import newChain from '../operations/newChain'
 import deleteBlock from '../operations/deleteBlock'
@@ -13,7 +13,7 @@ import { BlockLocationWithSection, isSection } from '../composition/BlockLocatio
 import { keyboardToPitch } from '../keyboardToPitch'
 import scaleDuration from '../operations/scaleDuration'
 import newSection from '../operations/newSection'
-import { drillIntoSection, globalPosition, leaveSection, SequencerState, setSelected } from './SequencerState'
+import { drillIntoSection, globalPosition, hideSectionSelect, leaveSection, SequencerState, setSelected, showSectionSelect } from './SequencerState'
 import { last } from '../util'
 import { playFreq } from '../play'
 
@@ -21,23 +21,23 @@ type Params = [KeyboardEvent, Composition, SequencerState]
 
 export default function sequencerKeyBinds(...params: Params): SequencerState {
   const  [ e, composition, state ] = params
-  const selectedLocation = state.selectedLocation
-
+  const { selectedLocation } = state
+  
   if (e.code === 'Escape') {
-    return leaveSection(state)
-  } else if (selectedLocation === null) {
+    if (state.showSectionSelect) {
+      return hideSectionSelect(state)
+    } else {
+      return leaveSection(state)
+    }
+  } else if (state.showSectionSelect || selectedLocation === null) {
     return state
   }
 
   const pitch = keyboardToPitch(composition.intervals, e.code)
 
-  if (pitch && !e.altKey && !e.ctrlKey) {
-    if (e.shiftKey) {
-      return setSelected(state, addBlock(selectedLocation, pitch))
-    } else {
-      changePitch(selectedLocation.block, pitch)
-      return {...state}
-    }
+  if (pitch && !hasModifierKey(e)) {
+    changeBlockElement(selectedLocation, pitch)
+    return {...state}
   } else if (e.code.startsWith('Digit')) {
     const digit = parseInt(e.code[5])
     return setSelected(state, scaleDuration(selectedLocation, digit, e.shiftKey))
@@ -70,7 +70,7 @@ function selectedBlockBinds(...props: Params): Record<string, () => SequencerSta
       if (e.shiftKey) {
         clearModulation(globalPosition(state), composition.modulations)
       } else {
-        changePitch(selectedLocation.block)
+        changeBlockElement(selectedLocation, null)
       }
       return {...state}
     },
@@ -122,15 +122,21 @@ function selectedBlockBinds(...props: Params): Record<string, () => SequencerSta
       return setSelected(state, resetDuration(selectedLocation))
     },
     'KeyT': () => {
-      if (e.altKey) {
+      if (e.shiftKey) {
         return setSelected(state, newChain(selectedLocation))
       }
       return state
     },
     'KeyW': () => {
-      if (e.altKey) {
+      if (e.shiftKey) {
         newSection(composition, selectedLocation)
         return drillIntoSection(state, selectedLocation as BlockLocationWithSection)
+      }
+      return state
+    },
+    'KeyF': () => {
+      if (e.shiftKey) {
+        return showSectionSelect(state)
       }
       return state
     },
@@ -140,4 +146,8 @@ function selectedBlockBinds(...props: Params): Record<string, () => SequencerSta
       return state
     }
   }
+}
+
+function hasModifierKey(e: KeyboardEvent) {
+  return e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
 }

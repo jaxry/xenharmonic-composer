@@ -99,11 +99,13 @@ export function throttle<T>(fn: (...args: T[]) => void): (...args: T[]) => void 
 }
 
 export function cls(...styles: Array<any>): string {
-  let str = ''
+  const classes = []
+  
   for (const style of styles) {
     if (typeof style === 'string') {
-      str += style + ' '
+      classes.push(style)
     }
   }
-  return str
+
+  return classes.join(' ')
 }

@@ -34,7 +34,7 @@
 }
 
 body {
-  background-color: #222;
+  background-color: #282828;
 }
 
 h1 {
@@ -55,7 +55,8 @@ ul {
 
 input {
   width: 5rem;
-  background: #383838;
+  background: #444;
+  padding: 0.25rem;
 }
 
 table {

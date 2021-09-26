@@ -1,3 +1,23 @@
 .sectionSelect {
   position: absolute;
+  background: #484848;
+  max-height: 20rem;
+  box-shadow: 0px 0px 20px #000;
+  overflow: auto;
+}
+
+.search {
+  display: block;
+  width: 100%;
+  font-weight: bold;
+}
+
+.section {
+  cursor: pointer;
+  user-select: none;
+  padding-left: 0.25rem;
+}
+
+.focused {
+  background: #666;
 }

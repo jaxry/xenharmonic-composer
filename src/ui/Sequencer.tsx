@@ -6,13 +6,15 @@ import Pitch from '../Pitch'
 import { last, mapIter } from '../util'
 import useClickOutside from './hooks/useClickOutside'
 import useKeyPress from './hooks/useKeyPress'
+import common from './common.module.css'
 import style from './Sequencer.module.css'
-import { globalPosition, initialState, selectBlock, SequencerState, setSelected } from './SequencerState'
+import { globalPosition, initialState, selectBlock, selectSection, SequencerState, setSelected } from './SequencerState'
 import { playFreq } from '../play'
-import shiftPitch from '../operations/shiftPitch'
-import useWheel from './hooks/useWheel'
+// import shiftPitch from '../operations/shiftPitch'
+// import useWheel from './hooks/useWheel'
 import BlockComponent from './BlockComponent'
 import SectionName from './SectionName'
+import SectionSelect from './SectionSelect'
 
 export default function Sequencer(props: { composition: Composition }) {
   const { composition } = props
@@ -34,16 +36,18 @@ export default function Sequencer(props: { composition: Composition }) {
 
   useKeyPress((e) => {
     const newState = sequencerKeyBinds(e, composition, state)
-    setState(newState)
-  }, undefined, !state.showSectionSelect)
-
-  const onWheel = useWheel((delta) => {
-    if (!selectedLocation) {
-      return
+    if (newState !== state) {
+      setState(newState)
     }
-    shiftPitch(selectedLocation?.block, composition.intervals, delta)
-    setState({...state})
-  })
+  }, undefined)
+
+  // const onWheel = useWheel((delta) => {
+  //   if (!selectedLocation) {
+  //     return
+  //   }
+  //   shiftPitch(selectedLocation?.block, composition.intervals, delta)
+  //   setState({...state})
+  // })
 
   const sequencerRef = useRef<HTMLDivElement>(null)
   useClickOutside(sequencerRef, (e) => {
@@ -61,7 +65,7 @@ export default function Sequencer(props: { composition: Composition }) {
       return  <div key={chain.id} className={style.chain} style={{top: `${chain.beginning * blockHeight}rem`}}>
       {chain.blocks.map(block => {
         const isSelected = (selectedLocation && block === selectedLocation.block) || false
-        return <BlockComponent
+        const blockComponent = <BlockComponent
           key={block.id}
           block={block} 
           blockHeight={blockHeight} 
@@ -69,14 +73,26 @@ export default function Sequencer(props: { composition: Composition }) {
           onClick={() => setState(selectBlock(state, block))} 
           ref={isSelected ? editingBlockRef : undefined}
         />
+
+        if (state.showSectionSelect && isSelected) {
+          return <div className={common.relative} key={block.id}>
+            <SectionSelect 
+              composition={composition} 
+              onSelect={(selectedSection) => setState(selectSection(state, section.findBlock(block)!, selectedSection))}
+             />
+            {blockComponent}
+          </div>
+        } else {
+          return blockComponent
+        }
       })}
     </div>
     })
   }
 
-  return <div className={style.sequencer} onWheel={onWheel}>
+  return <div className={style.sequencer}>
     <SectionName composition={composition} section={section} />
-    <div className={style.section} style={{height: `${section.duration * blockHeight}rem`}}>
+    <div className={style.section}>
       <div className={style.tracks} ref={sequencerRef}>
         {section.tracks.map((track, trackIndex) => {
           return <div key={trackIndex} className={style.track}>

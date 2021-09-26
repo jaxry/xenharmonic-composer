@@ -3,7 +3,14 @@ import { BlockLocation, BlockLocationWithSection, isSection } from '../compositi
 import Composition from '../composition/Composition'
 import { firstBlock } from '../composition/find'
 import Section from '../composition/Section'
+import changeBlockElement from '../operations/changeBlockElement'
 import { last } from '../util'
+
+export interface SequencerState {
+  sectionStack: SectionNode[],
+  selectedLocation: BlockLocation | null
+  showSectionSelect: boolean
+}
 
 export interface SectionNode {
   parentBlock?: Block
@@ -13,12 +20,6 @@ export interface SectionNode {
   tempo: number
 }
 
-export interface SequencerState {
-  sectionStack: SectionNode[],
-  selectedLocation: BlockLocation | null
-  showSectionSelect: boolean
-  sectionSearch: string
-}
 
 export function initialState(composition: Composition): SequencerState {
   return {
@@ -29,14 +30,14 @@ export function initialState(composition: Composition): SequencerState {
     }],
     selectedLocation: null,
     showSectionSelect: false,
-    sectionSearch: ''
   }
 }
 
 export function setSelected(state: SequencerState, location: BlockLocation | null): SequencerState {
   return {
     ...state,
-    selectedLocation: location
+    selectedLocation: location,
+    showSectionSelect: false,
   }
 }
 
@@ -58,7 +59,8 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
         tempo: prev.tempo * block.duration.quotient
       },
     ],
-    selectedLocation: firstBlock(section)
+    selectedLocation: firstBlock(section),
+    showSectionSelect: false
   }
 }
 
@@ -92,4 +94,23 @@ export function globalPosition(state: SequencerState) {
 
 export function activeSection(state: SequencerState) {
   return last(state.sectionStack).section
+}
+
+export function showSectionSelect(state: SequencerState) {
+  return {
+    ...state,
+    showSectionSelect: true
+  }
+}
+
+export function hideSectionSelect(state: SequencerState) {
+  return {
+    ...state,
+    showSectionSelect: false
+  }
+}
+
+export function selectSection(state:SequencerState, location: BlockLocation, section: Section) {
+  changeBlockElement(location, section)
+  return hideSectionSelect(state)
 }
