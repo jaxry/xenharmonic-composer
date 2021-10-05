@@ -1,5 +1,4 @@
 import { BlockLocationWithSection, isSection } from '../composition/BlockLocation'
-import type Composition from '../composition/Composition'
 import { keyboardToPitch } from '../keyboardToPitch'
 import addBlock from '../operations/addBlock'
 import changeBlockElement from '../operations/changeBlockElement'

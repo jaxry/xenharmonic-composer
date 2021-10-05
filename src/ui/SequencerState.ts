@@ -3,7 +3,9 @@ import { BlockLocation, BlockLocationWithSection, isSection } from '../compositi
 import type Composition from '../composition/Composition'
 import { firstBlock } from '../composition/find'
 import type Section from '../composition/Section'
-import { last } from '../util'
+import Pitch from '../Pitch'
+import { playFreq } from '../play'
+import { last, mapIter } from '../util'
 
 export interface SequencerState {
   composition: Composition
@@ -14,13 +16,12 @@ export interface SequencerState {
 
 export interface SectionNode {
   parentBlock?: Block
-  parentSection?: Section
   section: Section
   beginning: number
   tempo: number
 }
 
-export function initialState(composition: Composition): SequencerState {
+export function initialState(composition: Composition) {
   return {
     composition,
     sectionStack: [{
@@ -33,7 +34,9 @@ export function initialState(composition: Composition): SequencerState {
   }
 }
 
-export function setSelected(state: SequencerState, location: BlockLocation | null): SequencerState {
+// state transformers
+
+export function setSelected(state: SequencerState, location: BlockLocation | null) {
   return {
     ...state,
     selectedLocation: location,
@@ -41,7 +44,7 @@ export function setSelected(state: SequencerState, location: BlockLocation | nul
   }
 }
 
-export function drillIntoSection(state: SequencerState, location: BlockLocationWithSection): SequencerState {
+export function drillIntoSection(state: SequencerState, location: BlockLocationWithSection) {
   const block = location.block
   const section = block.element
 
@@ -53,10 +56,9 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
       ...state.sectionStack,
       { 
         parentBlock: block,
-        parentSection: location.section,
         section,
         beginning: prev.beginning + prev.tempo * location.beginning,
-        tempo: prev.tempo * block.duration.quotient
+        tempo: prev.tempo * block.duration.quotient,
       },
     ],
     selectedLocation: firstBlock(section),
@@ -64,36 +66,28 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
   }
 }
 
-export function leaveSection(state: SequencerState): SequencerState {
-  const poppedNode = last(state.sectionStack)
-
-  if (!poppedNode.parentSection) {
+export function leaveSection(state: SequencerState) {
+  if (state.sectionStack.length <= 1) {
     return state
   }
 
+  const parentBlock = last(state.sectionStack).parentBlock
+  const sectionStack = state.sectionStack.slice(0, state.sectionStack.length - 1)
+
   return {
     ...state,
-    sectionStack: state.sectionStack.slice(0, state.sectionStack.length - 1),
-    selectedLocation: poppedNode.parentSection.findBlock(poppedNode.parentBlock!)!
+    sectionStack,
+    selectedLocation: last(sectionStack).section.findBlock(parentBlock)!
   }
 }
 
-export function selectBlock(state: SequencerState, block: Block): SequencerState {
-  const loc = activeSection(state).findBlock(block)!
+export function selectBlock(state: SequencerState, block: Block) {
+  const loc = last(state.sectionStack).section.findBlock(block)!
   if (loc.block === state.selectedLocation?.block && isSection(loc)) {
     return drillIntoSection(state, loc)
   } else {
     return setSelected(state, loc)
   }
-}
-
-export function globalPosition(state: SequencerState) {
-  const sectionInfo = last(state.sectionStack)
-  return sectionInfo.beginning + state.selectedLocation!.beginning * sectionInfo.tempo
-}
-
-export function activeSection(state: SequencerState) {
-  return last(state.sectionStack).section
 }
 
 export function showSectionSelect(state: SequencerState) {
@@ -107,5 +101,43 @@ export function hideSectionSelect(state: SequencerState) {
   return {
     ...state,
     showSectionSelect: false
+  }
+}
+
+// state selectors
+
+export function activeSection(state: SequencerState) {
+  return last(state.sectionStack).section
+}
+
+export function globalPosition(state: SequencerState) {
+  const { beginning, tempo } = last(state.sectionStack)
+  return beginning + tempo * state.selectedLocation!.beginning
+}
+
+export function modulationsBetween(state: SequencerState) {
+  const { beginning, tempo, section } = last(state.sectionStack)
+  const end = beginning + tempo * section.duration
+
+  return mapIter(state.composition.modulations.modulationsBetween(beginning, end), (m) => {
+    return {
+      modulation: m,
+      position: (m.position - beginning) / tempo
+    }
+  })
+}
+
+// misc
+
+export function usePlayPitch() {
+  let prevPitch: Pitch
+
+  return (newState: SequencerState) => {
+    const elem = newState.selectedLocation?.block.element
+    if (elem instanceof Pitch && elem !== prevPitch) {
+      const root = newState.composition.modulations.totalModulationAtPosition(globalPosition(newState))
+      playFreq(root * elem.ratio)
+      prevPitch = elem
+    }
   }
 }

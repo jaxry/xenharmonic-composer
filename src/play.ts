@@ -63,18 +63,19 @@ export function playChain(chain: Chain, props: PlayProps) {
   let nextModulation = modulations.list[nextModulationIndex]
   let modulation = 1
 
-  const chainGlobalStart = props.sectionBeginning + chain.beginning * props.tempo
-  const chainGlobalEnd =  props.sectionBeginning + chain.end * props.tempo
+  const chainGlobalStart = props.sectionBeginning + props.tempo * chain.beginning 
+  const chainGlobalEnd =  props.sectionBeginning + props.tempo * chain.end
 
   player.start(globalTempoScale * chainGlobalStart, props.startTime)
   player.stop(globalTempoScale * chainGlobalEnd, props.startTime)
 
   for (const [block, blockBeginning] of chain.blockPositions()) {
-    const blockGlobalBeginning = props.sectionBeginning + blockBeginning * props.tempo
+    const blockGlobalBeginning = props.sectionBeginning + props.tempo * blockBeginning
 
     while (blockGlobalBeginning + props.modulationOffset >= nextModulation?.position) {
       modulation = applyModulation(modulation, nextModulation)
-      nextModulation = modulations.list[++nextModulationIndex]
+      nextModulationIndex++
+      nextModulation = modulations.list[nextModulationIndex]
     }
 
     if (block.element instanceof Pitch) {
