@@ -1,0 +1,98 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  font: 1rem sans-serif;
+  line-height: 1.25;
+  color: #eee;
+}
+
+:root {
+  color-scheme: dark;
+
+  --primaryHue: 220;
+  --primarySat: 75%;
+  --primary: hsl(var(--primaryHue), var(--primarySat), 75%);
+
+  --secondaryHue: 140;
+  --secondarySat: 50%;
+  --secondary: hsl(var(--secondary), var(--secondarySat), 75%);
+
+  --warningHue: 10;
+  --warningSat: 80%;
+  --warning: hsl(var(--warningHue), var(--warningSat), 75%);
+
+  --hover: #484848;
+  --active: #666;
+  --selected: hsl(var(--secondaryHue), var(--secondarySat), 35%);
+  --disabled: #888;
+  
+  --borderColor: #aaa;
+  --border: 1px solid var(--borderColor);
+}
+
+body {
+  background-color: #282828;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+i {
+  font-style: italic;
+}
+
+ul {
+  list-style: none
+}
+
+input {
+  width: 5rem;
+  background: #444;
+  padding: 0.25rem;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  letter-spacing: 0.1rem;
+  background: none;
+}
+
+button:disabled {
+  color: var(--disabled)
+}
+
+button:hover {
+  background: var(--hover);
+}
+
+button:active {
+  background: var(--active);
+}
+
+button.solid {
+  background-color: hsl(var(--primaryHue), var(--primarySat), 50%);
+}
+
+button.solid:hover {
+  background-color: hsl(var(--primaryHue), var(--primarySat), 45%);
+}
+
+button.solid:active {
+  background-color: hsl(var(--primaryHue), var(--primarySat), 40%);
+}
