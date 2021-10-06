@@ -1,13 +1,9 @@
 import type Block from './Block'
 
-let nextChainId = 1
-
 export default class Chain {
-  id = nextChainId++
   blocks: Block[]
   beginning: number
   end!: number
-  attachedTo?: Block
 
   constructor(blocks: Block[] = [], beginning = 0) {
     this.beginning = beginning

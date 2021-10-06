@@ -2,7 +2,7 @@
   import type Block from '../composition/Block'
   import Section from '../composition/Section'
   import Pitch from '../Pitch'
-  import { blockHeight } from './Sequencer.svelte'
+  import { blockHeight } from './props'
 
   export let block: Block
   export let selected: boolean

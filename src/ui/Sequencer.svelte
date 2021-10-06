@@ -1,13 +1,10 @@
-<script context="module">
-  export const blockHeight = 2.5
-</script>
-
 <script lang="ts">
-  import { composition } from './stores'
-  import { initialState, setSelected, SequencerState, modulationsBetween, usePlayPitch, activeSection } from './SequencerState'
-  import sequencerKeyBinds from './sequencerKeyBinds'
   import Block from './Block.svelte'
-  import { last } from '../util';
+  import { blockHeight } from './props'
+  import sequencerKeyBinds from './sequencerKeyBinds'
+  import { activeSection,initialState,modulationsBetween,SequencerState,setSelected,usePlayPitch } from './SequencerState'
+  import { composition } from './stores'
+  import useClickOutside from './useClickOutside'
 
   let state = initialState($composition)
   $: section = activeSection(state)
@@ -22,21 +19,30 @@
     state = newState
     return true
   }
+
+  function keydown(e: KeyboardEvent) {
+    const newState = sequencerKeyBinds(e, state)
+    if (setState(newState)) {
+      e.preventDefault()
+    }
+  }
+
+  const { clickInside, clickOutside } = useClickOutside(() => {
+    setState(setSelected(state, null))
+  })
+
 </script>
 
-<svelte:window on:keydown={(e) => {
-  const newState = sequencerKeyBinds(e, state)
-  if (setState(newState)) {
-    e.preventDefault()
-  }
-}} />
+<svelte:window on:keydown={keydown} on:click={clickOutside} />
+
+<input class='sectionName' bind:value={section.name}/>
 
 <div class='section'>
   <div class='tracks'>
     {#each section.tracks as track}
       <div class='track'>
         {#each track.chains as chain}
-          <div class='chain' style='top: {chain.beginning * blockHeight}rem'>
+          <div class='chain' style='top: {chain.beginning * blockHeight}rem' on:click={clickInside}>
             {#each chain.blocks as block}
               <Block
                 {block}
@@ -59,6 +65,12 @@
 </div>
 
 <style>
+  .sectionName {
+    width: 100%;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
   .section {
     position: relative;
   }

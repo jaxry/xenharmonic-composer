@@ -23,7 +23,7 @@ export default function sequencerKeyBinds(e: KeyboardEvent, state: SequencerStat
     if (state.showSectionSelect) {
       return hideSectionSelect(state)
     } else {
-      return leaveSection(state)
+      return setSelected(state, null)
     }
   } else if (state.showSectionSelect || selectedLocation === null) {
     return state
@@ -54,7 +54,9 @@ function selectedBlockBinds(e: KeyboardEvent, state: SequencerState): Record<str
 
   return {
     'Tab': () => {
-      if (isSection(selectedLocation)) {
+      if (e.shiftKey) {
+        return leaveSection(state)
+      } else if (isSection(selectedLocation)) {
         return drillIntoSection(state, selectedLocation)
       }
       return state
