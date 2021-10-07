@@ -1,15 +1,24 @@
 import Fraction from '../Fraction'
-import type Pitch from '../Pitch'
+import Pitch from '../Pitch'
+import { copy } from '../util'
 import Section from './Section'
 
 export type BlockElement = Pitch | Section | null
 
 export default class Block {
-  element: BlockElement = null
+  element: BlockElement
   duration: Fraction
 
-  constructor(duration = new Fraction(1)) {
-    this.duration = duration
+  constructor(copyBlock?: Block) {
+    if (copyBlock) {
+      this.element = copyBlock.element instanceof Pitch ?
+        copy(copyBlock.element) :
+        copyBlock.element
+      this.duration = copy(copyBlock.duration)
+    } else {
+      this.element = null
+      this.duration = new Fraction(1, 1)
+    }
   }
 
   get computedDuration() {

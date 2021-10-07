@@ -1,10 +1,13 @@
 <script lang="ts">
+import shiftPitch from '../operations/shiftPitch';
+
   import Block from './Block.svelte'
   import { blockHeight } from './props'
   import sequencerKeyBinds from './sequencerKeyBinds'
   import { activeSection,initialState,modulationsBetween,SequencerState,setSelected,usePlayPitch } from './SequencerState'
   import { composition } from './stores'
   import useClickOutside from './useClickOutside'
+  import useWheel from './useWheel'
 
   let state = initialState($composition)
   $: section = activeSection(state)
@@ -27,15 +30,27 @@
     }
   }
 
+  const wheel = useWheel((e, delta) => {
+    if (!state.selectedLocation) {
+      return
+    }
+    if (delta !== 0) {
+      shiftPitch(state.selectedLocation.block, state.composition.intervals, delta)
+      setState({...state})
+    }
+
+    e.preventDefault()
+  })
+
   const { clickInside, clickOutside } = useClickOutside(() => {
     setState(setSelected(state, null))
   })
 
 </script>
 
-<svelte:window on:keydown={keydown} on:click={clickOutside} />
+<svelte:window on:keydown={keydown} on:wheel|nonpassive={wheel} on:click={clickOutside} />
 
-<input class='sectionName' bind:value={section.name}/>
+<input class='sectionName' bind:value={section.name} on:input={() => state.composition.sortSections()}/>
 
 <div class='section'>
   <div class='tracks'>
