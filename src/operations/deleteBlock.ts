@@ -10,16 +10,13 @@ export default function deleteBlock(location: BlockLocation): BlockLocation {
     horizontalNeighbor(location, 1)
 
   chain.blocks.splice(blockIndex, 1)
-  chain.updatePosition()
 
   if (chain.blocks.length === 0) {
     track.chains.splice(chainIndex, 1)
   }
 
   if (!neighbor) {
-    const block = section.addTrackWithEmptyBlock()
-    section.refresh()
-    return section.findBlock(block)!
+    neighbor = section.addTrackWithEmptyBlock()
   }
 
   section.refresh()

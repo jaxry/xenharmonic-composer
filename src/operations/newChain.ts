@@ -6,7 +6,7 @@ export default function newChain(location: BlockLocation): BlockLocation {
   const { section, trackIndex, beginning, block } = location
 
   const newBlock = new Block(block)
-  const newChain = new Chain([newBlock], beginning)
+  const newChain = new Chain(newBlock, beginning)
 
   section.getOrMakeTrack(trackIndex + 1).chains.push(newChain)
   section.refresh()

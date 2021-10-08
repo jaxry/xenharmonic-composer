@@ -5,8 +5,8 @@ export default function useWheel(callback: (e: WheelEvent, delta: 0 | 1 | -1) =>
   let wheelDelta = 0
 
   return (e: WheelEvent) => {
-    wheelDelta += Math.abs(e.deltaY)
-    if (wheelDelta > 4) {
+    wheelDelta += e.deltaY
+    if (Math.abs(wheelDelta) > 4) {
       wheelDelta = 0
       callback(e, -Math.sign(e.deltaY) as 1 | -1)
     } else {

@@ -48,6 +48,10 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
   const block = location.block
   const section = block.element
 
+  // this section may contain sections that have changed in duration since the last refresh
+  // we refresh again to make sure there are no overlapping blocks
+  section.refresh()
+
   const prev = last(state.sectionStack)
 
   return {
@@ -73,11 +77,14 @@ export function leaveSection(state: SequencerState) {
 
   const parentBlock = last(state.sectionStack).parentBlock
   const sectionStack = state.sectionStack.slice(0, state.sectionStack.length - 1)
+  const section = last(sectionStack).section
+
+  section.refresh()
 
   return {
     ...state,
     sectionStack,
-    selectedLocation: last(sectionStack).section.findBlock(parentBlock)!
+    selectedLocation: section.findBlock(parentBlock)!
   }
 }
 

@@ -5,12 +5,12 @@ export default class Chain {
   beginning: number
   end!: number
 
-  constructor(blocks: Block[] = [], beginning = 0) {
+  constructor(block: Block, beginning = 0) {
     this.beginning = beginning
-    this.blocks = blocks
+    this.blocks = [block]
   }
 
-  updatePosition() {
+  updateEnd() {
     let stop = this.beginning
     for (const block of this.blocks) {
       stop += block.computedDuration

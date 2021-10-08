@@ -8,34 +8,6 @@ export default class Track {
     this.chains = chains
   }
 
-  order() {
-    this.chains.sort((a, b) => a.beginning - b.beginning)
-  }
-
-  updateChainPositions() {
-    for (const chain of this.chains) {
-      chain.updatePosition()
-    }
-  }
-
-  // chains must be ordered
-  duration() {
-    const lastChain = last(this.chains)
-    return lastChain?.end || 0
-  }
-
-  minBlockDuration() {
-    let min = Infinity
-
-    for (const chain of this.chains) {
-      for (const block of chain.blocks) {
-        min = Math.min(block.computedDuration, min)
-      }
-    }
-
-    return min
-  }
-
   doesChainFit(chain: Chain) {
     for (const other of this.chains) {
       if (other !== chain && chain.end >= other.beginning && chain.beginning <= other.end) {

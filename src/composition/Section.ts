@@ -8,17 +8,9 @@ export default class Section {
   tracks: Track[] = []
   duration!: number
   minBlockDuration!: number
-  containedIn: Section[]
 
-  constructor(name = 'New Section', containedIn?: Section) {
+  constructor(name = 'New Section') {
     this.name = name
-
-    if (containedIn) {
-      this.containedIn = [containedIn]
-    } else {
-      this.containedIn = []
-    }
-
     this.addTrackWithEmptyBlock()
     this.refresh()
   }
@@ -69,35 +61,9 @@ export default class Section {
   addTrackWithEmptyBlock(trackIndex = 0) {
     const block = new Block()
 
-    this.tracks[trackIndex] = new Track([
-      new Chain([
-        block
-      ])
-    ])
+    this.tracks[trackIndex] = new Track([new Chain(block)])
 
     return block
-  }
-
-  shiftChainToFreeSpace(location: ChainLocation, dx: 1 | -1, refresh = true) {
-    const { trackIndex, chainIndex, chain } = location
-
-    let nextTrackIndex = trackIndex + dx
-    while (this.tracks[nextTrackIndex] && !this.tracks[nextTrackIndex].doesChainFit(chain)) {
-      nextTrackIndex += dx
-    }
-  
-    if (nextTrackIndex < 0) {
-      return
-    }
-  
-    this.tracks[trackIndex].chains.splice(chainIndex, 1)
-  
-    const moveToTrack = this.getOrMakeTrack(nextTrackIndex)
-    moveToTrack.chains.push(chain)
-
-    if (refresh) {
-      this.refresh()
-    }
   }
 
   refresh() {
@@ -105,19 +71,22 @@ export default class Section {
     this.minBlockDuration = Infinity
 
     for (const [trackIndex, track] of this.tracks.entries()) {
-      track.updateChainPositions()
-      track.order()
-      this.findOverlappingChainsAndShift(trackIndex, track)
 
-      this.duration = Math.max(this.duration, track.duration())
-      this.minBlockDuration = Math.min(this.minBlockDuration, track.minBlockDuration())
+      for (const chain of track.chains) {
+        chain.updateEnd()
+
+        for (const block of chain.blocks) {
+          this.minBlockDuration = Math.min(this.minBlockDuration, block.computedDuration)
+        }
+        this.duration = Math.max(this.duration, chain.end)
+      }
+
+      track.chains.sort((a, b) => a.beginning - b.beginning)
+
+      this.findOverlappingChainsAndShift(trackIndex, track)
     }
 
     this.removeEmptyTracksFromEnd()
-
-    for (const parent of this.containedIn) {
-      parent.refresh()
-    }
   }
 
   ; *chains() {
@@ -141,6 +110,27 @@ export default class Section {
     }
   }
 
+  shiftChainToFreeSpace(location: ChainLocation, dx: 1 | -1) {
+    const { trackIndex, chainIndex, chain } = location
+
+    let nextTrackIndex = trackIndex + dx
+    while (this.tracks[nextTrackIndex] && !this.tracks[nextTrackIndex].doesChainFit(chain)) {
+      nextTrackIndex += dx
+    }
+  
+    // tried shifting chain to the left and hit the edge
+    if (nextTrackIndex < 0) {
+      return false
+    }
+  
+    this.tracks[trackIndex].chains.splice(chainIndex, 1)
+  
+    const moveToTrack = this.getOrMakeTrack(nextTrackIndex)
+    moveToTrack.chains.push(chain)
+
+    return true
+  }
+
   private removeEmptyTracksFromEnd() {
     for (let i = this.tracks.length - 1; i >= 0; i--) {
       const track = this.tracks[i]
@@ -157,7 +147,8 @@ export default class Section {
       let a = track.chains[i - 1]
       let b = track.chains[i]
       if (b.beginning <= a.end) {
-        this.shiftChainToFreeSpace({section: this, trackIndex, track, chainIndex: i, chain: b}, 1, false)
+        const chainLocation = {section: this, trackIndex, track, chainIndex: i, chain: b}
+        this.shiftChainToFreeSpace(chainLocation, 1)
         i--
       }
     }
