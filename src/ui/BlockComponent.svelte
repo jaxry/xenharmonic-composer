@@ -2,16 +2,27 @@
   import type Block from '../composition/Block'
   import Section from '../composition/Section'
   import Pitch from '../Pitch'
-  import { blockHeight } from './props'
 
   export let block: Block
+  export let blockHeight: number
   export let selected: boolean
+   
+  function scrollTo(node: HTMLDivElement, selected: boolean) {
+    return {
+      update() {
+        if (selected) {
+          node.scrollIntoView({block: 'center'})
+        }
+      }
+    }
+  }
 </script>
 
-<div 
+<div
   class='block' 
   class:selected 
   style='height: {blockHeight * block.computedDuration}rem' 
+  use:scrollTo={selected}
   on:click
 >
   {#if block.element instanceof Pitch}

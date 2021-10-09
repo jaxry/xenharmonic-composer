@@ -1,8 +1,8 @@
 <script lang="ts">
-import shiftPitch from '../operations/shiftPitch';
+import { afterUpdate, beforeUpdate } from 'svelte';
 
-  import Block from './Block.svelte'
-  import { blockHeight } from './props'
+  import shiftPitch from '../operations/shiftPitch'
+  import BlockComponent from './BlockComponent.svelte'
   import sequencerKeyBinds from './sequencerKeyBinds'
   import { activeSection,initialState,modulationsBetween,SequencerState,setSelected,usePlayPitch } from './SequencerState'
   import { composition } from './stores'
@@ -11,6 +11,7 @@ import shiftPitch from '../operations/shiftPitch';
 
   let state = initialState($composition)
   $: section = activeSection(state)
+  $: blockHeight = 2.5 / section.minBlockDuration
   
   const playPitch = usePlayPitch()
 
@@ -45,22 +46,22 @@ import shiftPitch from '../operations/shiftPitch';
   const { clickInside, clickOutside } = useClickOutside(() => {
     setState(setSelected(state, null))
   })
-
 </script>
 
 <svelte:window on:keydown={keydown} on:wheel|nonpassive={wheel} on:click={clickOutside} />
 
-<input class='sectionName' bind:value={section.name} on:input={() => state.composition.sortSections()}/>
+<input class='sectionName' bind:value={section.name} />
 
 <div class='section'>
   <div class='tracks'>
-    {#each section.tracks as track}
+    {#each section.tracks as track (track)}
       <div class='track'>
-        {#each track.chains as chain}
+        {#each track.chains as chain (chain)}
           <div class='chain' style='top: {chain.beginning * blockHeight}rem' on:click={clickInside}>
-            {#each chain.blocks as block}
-              <Block
+            {#each chain.blocks as block (block)}
+              <BlockComponent
                 {block}
+                {blockHeight}
                 selected={state.selectedLocation?.block === block}
                 on:click={() => setState(setSelected(state, section.findBlock(block)))}
               />
@@ -70,6 +71,7 @@ import shiftPitch from '../operations/shiftPitch';
       </div>
     {/each}
   </div>
+
   <div class='modulations'>
     {#each modulationsBetween(state) as {modulation, position}}
       <div class='modulation' style='top: {blockHeight * position}rem'>
@@ -77,6 +79,7 @@ import shiftPitch from '../operations/shiftPitch';
       </div>
     {/each}
   </div>
+  
 </div>
 
 <style>

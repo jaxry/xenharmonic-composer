@@ -12,7 +12,7 @@ export class Instrument implements InstrumentProps {
   attack = 0.002 // seconds
   decay = 0.5 // seconds
   sustain = 0.2 // gain between 0 and 1
-  release = 0.1 // seconds
+  release = 0.05 // seconds
 
   vibratoFreq = 3 + Math.random()
   vibratoAmp = 10
