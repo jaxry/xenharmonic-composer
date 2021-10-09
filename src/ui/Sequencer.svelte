@@ -1,19 +1,20 @@
 <script lang="ts">
-import { afterUpdate, beforeUpdate } from 'svelte';
-
-  import shiftPitch from '../operations/shiftPitch'
+  import type Block from '../composition/Block'
+  import { shiftPitch } from '../composition/operations'
   import BlockComponent from './BlockComponent.svelte'
+  import Modulations from './Modulations.svelte'
   import sequencerKeyBinds from './sequencerKeyBinds'
-  import { activeSection,initialState,modulationsBetween,SequencerState,setSelected,usePlayPitch } from './SequencerState'
+  import type { SequencerState } from './SequencerState'
+  import * as stateHelp from './SequencerState'
   import { composition } from './stores'
   import useClickOutside from './useClickOutside'
   import useWheel from './useWheel'
 
-  let state = initialState($composition)
-  $: section = activeSection(state)
+  let state = stateHelp.initialState($composition)
+  $: section = stateHelp.activeSection(state)
   $: blockHeight = 2.5 / section.minBlockDuration
   
-  const playPitch = usePlayPitch()
+  const playPitch = stateHelp.usePlayPitch()
 
   function setState(newState: SequencerState) {
     if (newState === state) {
@@ -44,8 +45,21 @@ import { afterUpdate, beforeUpdate } from 'svelte';
   })
 
   const { clickInside, clickOutside } = useClickOutside(() => {
-    setState(setSelected(state, null))
+    setState(stateHelp.setSelected(state, null))
   })
+
+  function click(block: Block) {
+    return () => {
+      setState(stateHelp.setSelected(state, section.findBlock(block)))
+    }
+  }
+
+  function contextMenu(block: Block) {
+    return (e: MouseEvent) => {
+      setState(stateHelp.setSelected(state, section.findBlock(block)))
+      e.preventDefault()
+    }
+  }
 </script>
 
 <svelte:window on:keydown={keydown} on:wheel|nonpassive={wheel} on:click={clickOutside} />
@@ -63,7 +77,8 @@ import { afterUpdate, beforeUpdate } from 'svelte';
                 {block}
                 {blockHeight}
                 selected={state.selectedLocation?.block === block}
-                on:click={() => setState(setSelected(state, section.findBlock(block)))}
+                on:click={click(block)}
+                on:contextmenu={contextMenu(block)}
               />
             {/each}
           </div>
@@ -72,14 +87,7 @@ import { afterUpdate, beforeUpdate } from 'svelte';
     {/each}
   </div>
 
-  <div class='modulations'>
-    {#each modulationsBetween(state) as {modulation, position}}
-      <div class='modulation' style='top: {blockHeight * position}rem'>
-        {modulation.interval.numerator} / {modulation.interval.denominator}
-      </div>
-    {/each}
-  </div>
-  
+  <Modulations {state} {blockHeight} />
 </div>
 
 <style>
@@ -108,17 +116,5 @@ import { afterUpdate, beforeUpdate } from 'svelte';
     width: 100%;
     position: absolute;
     border: var(--border);
-  }
-
-  .modulations {
-    display: absolute;
-    top: 0;
-    width: 100%;
-  }
-
-  .modulation {
-    position: absolute;
-    border-top: 2px solid var(--primary);
-    width: 100%;
   }
 </style>

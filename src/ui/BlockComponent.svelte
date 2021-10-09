@@ -24,13 +24,16 @@
   style='height: {blockHeight * block.computedDuration}rem' 
   use:scrollTo={selected}
   on:click
+  on:contextmenu
 >
   {#if block.element instanceof Pitch}
     {block.element.octave} . {block.element.interval.toString()}
   {:else if block.element instanceof Section}
     {block.element.name}
   {/if}
+
   <div>{block.duration.toString()}</div>
+  
 </div>
 
 <style>
