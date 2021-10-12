@@ -2,32 +2,30 @@
   import type Block from '../composition/Block'
   import { shiftPitch } from '../composition/operations'
   import BlockComponent from './BlockComponent.svelte'
+  import ContextMenu from './ContextMenu.svelte'
+  import ContextMenuItem from './ContextMenuItem.svelte'
   import Modulations from './Modulations.svelte'
   import sequencerKeyBinds from './sequencerKeyBinds'
-  import type { SequencerState } from './SequencerState'
-  import * as stateHelp from './SequencerState'
+  import * as stateHelper from './SequencerState'
   import { composition } from './stores'
   import useClickOutside from './useClickOutside'
   import useWheel from './useWheel'
 
-  let state = stateHelp.initialState($composition)
-  $: section = stateHelp.activeSection(state)
+  let state = stateHelper.initialState($composition)
+  $: section = stateHelper.activeSection(state)
   $: blockHeight = 2.5 / section.minBlockDuration
-  
-  const playPitch = stateHelp.usePlayPitch()
 
-  function setState(newState: SequencerState) {
-    if (newState === state) {
-      return false
-    }
-    playPitch(newState)
-    state = newState
-    return true
+  const playPitch = stateHelper.usePlayPitch()
+  $: {
+    playPitch(state)
   }
+
+  let contextMenu: ContextMenu
 
   function keydown(e: KeyboardEvent) {
     const newState = sequencerKeyBinds(e, state)
-    if (setState(newState)) {
+    if (newState !== state) {
+      state = newState
       e.preventDefault()
     }
   }
@@ -38,35 +36,46 @@
     }
     if (delta !== 0) {
       shiftPitch(state.selectedLocation.block, state.composition.intervals, delta)
-      setState({...state})
+      state = state
     }
 
     e.preventDefault()
   })
 
   const { clickInside, clickOutside } = useClickOutside(() => {
-    setState(stateHelp.setSelected(state, null))
+    state = stateHelper.setSelected(state, null)
   })
 
-  function click(block: Block) {
-    return () => {
-      setState(stateHelp.setSelected(state, section.findBlock(block)))
-    }
+  function selectBlock(block: Block){
+    state = stateHelper.setSelected(state, section.findBlock(block))
   }
 
-  function contextMenu(block: Block) {
+  function showContextMenu(block: Block) {
     return (e: MouseEvent) => {
-      setState(stateHelp.setSelected(state, section.findBlock(block)))
+      selectBlock(block)
+      contextMenu.show(e.clientX, e.clientY)
       e.preventDefault()
     }
   }
+
+
 </script>
 
-<svelte:window on:keydown={keydown} on:wheel|nonpassive={wheel} on:click={clickOutside} />
+<svelte:window 
+  on:keydown={keydown} 
+  on:wheel|nonpassive={wheel} 
+  on:click={clickOutside} 
+/>
+
+<ContextMenu bind:this={contextMenu}>
+  <ContextMenuItem>hi</ContextMenuItem>
+  <ContextMenuItem>bye</ContextMenuItem>
+  <ContextMenuItem>Another</ContextMenuItem>
+</ContextMenu>
 
 <input class='sectionName' bind:value={section.name} />
 
-<div class='section'>
+<div class='section' style='height: {section.duration * blockHeight}rem'>
   <div class='tracks'>
     {#each section.tracks as track (track)}
       <div class='track'>
@@ -76,9 +85,9 @@
               <BlockComponent
                 {block}
                 {blockHeight}
-                selected={state.selectedLocation?.block === block}
-                on:click={click(block)}
-                on:contextmenu={contextMenu(block)}
+                isSelected={stateHelper.selectedBlock(state) === block}
+                on:click={() => selectBlock(block)}
+                on:contextmenu={showContextMenu(block)} 
               />
             {/each}
           </div>

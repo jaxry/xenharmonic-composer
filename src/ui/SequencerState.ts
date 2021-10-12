@@ -11,7 +11,6 @@ export interface SequencerState {
   composition: Composition
   sectionStack: SectionNode[],
   selectedLocation: BlockLocation | null
-  showSectionSelect: boolean
 }
 
 export interface SectionNode {
@@ -30,7 +29,6 @@ export function initialState(composition: Composition) {
       tempo: 1
     }],
     selectedLocation: null,
-    showSectionSelect: false,
   }
 }
 
@@ -40,7 +38,6 @@ export function setSelected(state: SequencerState, location: BlockLocation | nul
   return {
     ...state,
     selectedLocation: location,
-    showSectionSelect: false,
   }
 }
 
@@ -66,7 +63,6 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
       },
     ],
     selectedLocation: firstBlock(section),
-    showSectionSelect: false
   }
 }
 
@@ -97,21 +93,11 @@ export function selectBlock(state: SequencerState, block: Block) {
   }
 }
 
-export function showSectionSelect(state: SequencerState) {
-  return {
-    ...state,
-    showSectionSelect: true
-  }
-}
-
-export function hideSectionSelect(state: SequencerState) {
-  return {
-    ...state,
-    showSectionSelect: false
-  }
-}
-
 // state selectors
+
+export function selectedBlock(state: SequencerState) {
+  return state.selectedLocation?.block
+}
 
 export function activeSection(state: SequencerState) {
   return last(state.sectionStack).section

@@ -5,24 +5,22 @@
 
   export let block: Block
   export let blockHeight: number
-  export let selected: boolean
-   
-  function scrollTo(node: HTMLDivElement, selected: boolean) {
-    return {
-      update() {
-        if (selected) {
-          node.scrollIntoView({block: 'center'})
-        }
-      }
+  export let isSelected: boolean
+
+  let elem: HTMLElement
+
+  $: {
+    if (isSelected && elem) {
+      elem.scrollIntoView({block: 'center'})
     }
   }
 </script>
 
 <div
   class='block' 
-  class:selected 
+  class:isSelected 
   style='height: {blockHeight * block.computedDuration}rem' 
-  use:scrollTo={selected}
+  bind:this={elem}
   on:click
   on:contextmenu
 >
@@ -61,7 +59,7 @@
     background: var(--active);
   }
 
-  .selected {
+  .isSelected {
     background: var(--selected) !important;
   }
 </style>

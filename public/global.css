@@ -24,10 +24,10 @@
   --warningSat: 80%;
   --warning: hsl(var(--warningHue), var(--warningSat), 75%);
 
-  --hover: #484848;
+  --background: #383838;
+  --hover: #555;
   --active: #666;
   --selected: hsl(var(--secondaryHue), var(--secondarySat), 35%);
-  --disabled: #888;
   
   --borderColor: #aaa;
   --border: 1px solid var(--borderColor);

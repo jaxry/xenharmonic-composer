@@ -33,7 +33,7 @@
   }
 
   .tabs {
-    background: #333;
+    background: var(--background);
     flex: 0 0 auto;
   }
 
@@ -45,6 +45,10 @@
 
   .tab:hover {
     background: var(--hover);
+  }
+
+  .tab:active {
+    background: var(--active);
   }
 
   .selected {
