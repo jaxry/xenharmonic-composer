@@ -23,6 +23,9 @@
   let contextMenu: ContextMenu
 
   function keydown(e: KeyboardEvent) {
+    if (contextMenu.isVisible()) {
+      return
+    }
     const newState = sequencerKeyBinds(e, state)
     if (newState !== state) {
       state = newState
@@ -31,7 +34,7 @@
   }
 
   const wheel = useWheel((e, delta) => {
-    if (!state.selectedLocation) {
+    if (!state.selectedLocation || contextMenu.isVisible()) {
       return
     }
     if (delta !== 0) {
@@ -57,8 +60,6 @@
       e.preventDefault()
     }
   }
-
-
 </script>
 
 <svelte:window 
@@ -68,9 +69,18 @@
 />
 
 <ContextMenu bind:this={contextMenu}>
-  <ContextMenuItem>hi</ContextMenuItem>
-  <ContextMenuItem>bye</ContextMenuItem>
-  <ContextMenuItem>Another</ContextMenuItem>
+  <ContextMenuItem action={() => console.log('one')}>hi</ContextMenuItem>
+  <ContextMenuItem>
+    Expand me
+    <svelte:fragment slot='submenu'>
+      <ContextMenuItem>hey</ContextMenuItem>
+      <ContextMenuItem>there</ContextMenuItem>
+      <ContextMenuItem>guy</ContextMenuItem>
+      <ContextMenuItem>i</ContextMenuItem>
+      <ContextMenuItem>am</ContextMenuItem>
+    </svelte:fragment>
+  </ContextMenuItem>
+  <ContextMenuItem action={() => console.log('three')}>Another</ContextMenuItem>
 </ContextMenu>
 
 <input class='sectionName' bind:value={section.name} />

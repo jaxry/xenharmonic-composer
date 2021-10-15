@@ -11,12 +11,8 @@ export default function sequencerKeyBinds(e: KeyboardEvent, state: SequencerStat
   const { selectedLocation, composition } = state
   
   if (e.code === 'Escape') {
-    if (state.showSectionSelect) {
-      return stateHelper.hideSectionSelect(state)
-    } else {
-      return stateHelper.leaveSection(state)
-    }
-  } else if (state.showSectionSelect || selectedLocation === null) {
+    return stateHelper.leaveSection(state)
+  } else if (selectedLocation === null) {
     return state
   }
 
@@ -121,12 +117,6 @@ function selectedBlockBinds(e: KeyboardEvent, state: SequencerState): Record<str
       if (e.shiftKey) {
         operations.newSection(composition, selectedLocation)
         return stateHelper.drillIntoSection(state, selectedLocation as BlockLocationWithSection)
-      }
-      return state
-    },
-    'KeyF': () => {
-      if (e.shiftKey) {
-        return stateHelper.showSectionSelect(state)
       }
       return state
     },
