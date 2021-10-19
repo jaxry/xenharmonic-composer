@@ -1,18 +1,19 @@
 <script context="module" lang="ts">
   import useContext from "./useContext"
+  import type { Unsubscriber } from "svelte/store"
 
-  const behavior = useContext<{
-    hide: () => void,
-    onLoseFocus: (elem: HTMLElement, callback: () => void) => void
-    removeOnLoseFocus: () => void
+  const context = useContext<{
+    onPointerEnter: (callback: (elem: HTMLElement) => void) => Unsubscriber
+    hide: () => void
   }>()
   
-  export const getContextMenuBehavior = behavior.get
+  export const getContextMenuContext = context.get
 </script>
 
 <script lang="ts">
-  import { afterUpdate, beforeUpdate } from "svelte"
+  import { afterUpdate, tick } from "svelte"
   import useClickOutside from "./useClickOutside"
+  import useEvent from "./useEvent";
 
   let elem: HTMLElement
 
@@ -20,17 +21,6 @@
   let x: number
   let y: number
   let parent: {width: number, height: number}
-  
-  let activeTarget: HTMLElement | null = null
-  let loseFocusCallback: () => void = null
-
-  export function show(_x = 0, _y = 0, _parent?: {width: number, height:number}) {
-    x = _x + (_parent ? _parent.width : 0)
-    y = _y
-    parent = _parent
-
-    visible = true
-  }
 
   export function hide(delay = 0) {
     if (visible) {
@@ -38,25 +28,31 @@
     }
   }
 
+  export async function show(_x = 0, _y = 0, _parent?: { width: number, height:number }) {
+    hide()
+    await tick()
+    x = _x + (_parent ? _parent.width : 0)
+    y = _y
+    parent = _parent
+    visible = true
+  }
+
   export function isVisible() {
     return visible
   }
 
-  behavior.set({
-    hide,
-    onLoseFocus(elem, fn) {
-      activeTarget = elem
-      loseFocusCallback = fn
-    },
-    removeOnLoseFocus() {
-      activeTarget = null
-      loseFocusCallback = null
-    }
+  const { subscribe: onPointerEnter, emit: emitPointerEnter } = useEvent<HTMLElement>(null)
+
+  context.set({
+    onPointerEnter,
+    hide
   })
 
-  $: {
-    if (elem) {
-      document.body.appendChild(elem)
+  let lastElem: HTMLElement
+  function pointerMove(e: PointerEvent) {
+    if (lastElem !== e.target) {
+      lastElem = e.target as HTMLElement
+      emitPointerEnter(lastElem)
     }
   }
 
@@ -72,12 +68,11 @@
     }
     if (y + elem.offsetHeight > document.documentElement.clientHeight) {
       y = parent ?
-        y - elem.offsetHeight - parent.height :
+        y - elem.offsetHeight + parent.height :
         y - elem.offsetHeight
     }
   }
 
-  beforeUpdate(fitElement)
   afterUpdate(fitElement)
 
   const { clickInside, clickOutside } = useClickOutside(hide)
@@ -88,13 +83,9 @@
     }
   }
 
-  let lastTarget: EventTarget
-  function move(e: PointerEvent) {
-    if (e.target !== lastTarget) {
-      if (activeTarget && !activeTarget.contains(e.target as Node)) {
-        loseFocusCallback?.()
-      }
-      lastTarget = e.target
+  $: {
+    if (elem) {
+      document.body.appendChild(elem)
     }
   }
 </script>
@@ -106,7 +97,7 @@
     bind:this={elem}
     style='transform: translate({x}px, {y}px)'
     on:click={clickInside}
-    on:pointermove={move}
+    on:pointermove={pointerMove}
   >
     <slot />
   </div>
@@ -117,5 +108,6 @@
     position: fixed;
     top: 0;
     left: 0;
+    background: var(--background);
   }
 </style>

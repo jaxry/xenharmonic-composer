@@ -3,7 +3,8 @@
   import { shiftPitch } from '../composition/operations'
   import BlockComponent from './BlockComponent.svelte'
   import ContextMenu from './ContextMenu.svelte'
-  import ContextMenuItem from './ContextMenuItem.svelte'
+  import ContextMenuAction from './ContextMenuAction.svelte'
+  import ContextMenuSubMenu from './ContextMenuSubMenu.svelte'
   import Modulations from './Modulations.svelte'
   import sequencerKeyBinds from './sequencerKeyBinds'
   import * as stateHelper from './SequencerState'
@@ -69,18 +70,18 @@
 />
 
 <ContextMenu bind:this={contextMenu}>
-  <ContextMenuItem action={() => console.log('one')}>hi</ContextMenuItem>
-  <ContextMenuItem>
+  <ContextMenuAction action={() => console.log('one')}>hi</ContextMenuAction>
+  <ContextMenuSubMenu>
     Expand me
     <svelte:fragment slot='submenu'>
-      <ContextMenuItem>hey</ContextMenuItem>
-      <ContextMenuItem>there</ContextMenuItem>
-      <ContextMenuItem>guy</ContextMenuItem>
-      <ContextMenuItem>i</ContextMenuItem>
-      <ContextMenuItem>am</ContextMenuItem>
+      <ContextMenuAction>hey</ContextMenuAction>
+      <ContextMenuAction>there</ContextMenuAction>
+      <ContextMenuAction>guy</ContextMenuAction>
+      <ContextMenuAction>i</ContextMenuAction>
+      <ContextMenuAction>am</ContextMenuAction>
     </svelte:fragment>
-  </ContextMenuItem>
-  <ContextMenuItem action={() => console.log('three')}>Another</ContextMenuItem>
+  </ContextMenuSubMenu>
+  <ContextMenuAction action={() => console.log('three')}>Another</ContextMenuAction>
 </ContextMenu>
 
 <input class='sectionName' bind:value={section.name} />
