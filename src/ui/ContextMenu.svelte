@@ -1,9 +1,8 @@
 <script context="module" lang="ts">
   import useContext from "./useContext"
-  import type { Unsubscriber } from "svelte/store"
 
   const context = useContext<{
-    onPointerEnter: (callback: (elem: HTMLElement) => void) => Unsubscriber
+    onPointerEnter: (callback: (elem: HTMLElement) => void) => (() => void)
     hide: () => void
   }>()
   
@@ -12,7 +11,6 @@
 
 <script lang="ts">
   import { afterUpdate, tick } from "svelte"
-  import useClickOutside from "./useClickOutside"
   import useEvent from "./useEvent";
 
   let elem: HTMLElement
@@ -35,25 +33,33 @@
     y = _y
     parent = _parent
     visible = true
+
+    // if a ContextMenu creates other ContextMenus, we don't want to hide the main menu if the submenus are clicked
+    document.querySelector('main').addEventListener('click', (e) => {
+      hide()
+    }, { once: true })
   }
 
   export function isVisible() {
     return visible
   }
 
-  const { subscribe: onPointerEnter, emit: emitPointerEnter } = useEvent<HTMLElement>(null)
+  const pointerEnterEvent = useEvent<HTMLElement>(null)
 
   context.set({
-    onPointerEnter,
+    onPointerEnter: pointerEnterEvent.subscribe,
     hide
   })
 
-  let lastElem: HTMLElement
+  let lastElem: HTMLElement = null
   function pointerMove(e: PointerEvent) {
     if (lastElem !== e.target) {
       lastElem = e.target as HTMLElement
-      emitPointerEnter(lastElem)
+      pointerEnterEvent.emit(lastElem)
     }
+  }
+  function pointerLeave(e: PointerEvent) {
+    lastElem = null
   }
 
   function fitElement() {
@@ -75,8 +81,6 @@
 
   afterUpdate(fitElement)
 
-  const { clickInside, clickOutside } = useClickOutside(hide)
-
   function keypress(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       hide()
@@ -90,14 +94,14 @@
   }
 </script>
 
-<svelte:window on:click={clickOutside} on:keydown={keypress} />
+<svelte:window on:keydown={keypress} />
 
 {#if visible}
   <div class='menu'
     bind:this={elem}
     style='transform: translate({x}px, {y}px)'
-    on:click={clickInside}
     on:pointermove={pointerMove}
+    on:pointerleave={pointerLeave}
   >
     <slot />
   </div>

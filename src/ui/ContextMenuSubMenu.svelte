@@ -45,14 +45,17 @@
 
 </script>
 
-<div 
+<div
   class:active
   on:pointerenter={enter}
   on:pointerleave={leave}
   bind:this={elem}
 >
   <ContextMenuItem>
-    <slot />
+    <div class='item'>
+      <div class='label'> <slot /> </div>
+      <div class='arrow'> > </div>
+    </div>
   </ContextMenuItem>
 </div>
 
@@ -64,6 +67,20 @@
 </ContextMenu>
   
 <style>
+  .item {
+    display: flex;
+  }
+
+  .label {
+    flex: 1 0 auto;
+  }
+
+  .arrow {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+  }
+
   .active {
     background: var(--hover);
   }

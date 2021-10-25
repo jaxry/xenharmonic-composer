@@ -1,11 +1,11 @@
 import { onDestroy } from "svelte";
-import { readable, Subscriber } from "svelte/store";
+import { readable } from "svelte/store";
 
 export default function useEvent<T>(initial: T) {
-  let _emit: (x: T) => void
+  let emit: (x: T) => void
   
   const event = readable(initial, (set) => {
-    _emit = set
+    emit = set
   })
 
   function subscribe(callback: (x: T) => void) {
@@ -16,6 +16,6 @@ export default function useEvent<T>(initial: T) {
 
   return {
     subscribe,
-    emit: (x: T) => _emit?.(x)
+    emit: (x: T) => emit?.(x)
   }
 }

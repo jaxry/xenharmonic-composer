@@ -33,6 +33,11 @@
   --border: 1px solid var(--borderColor);
 }
 
+html,
+body {
+  height: 100%
+}
+
 body {
   background-color: #282828;
 }
