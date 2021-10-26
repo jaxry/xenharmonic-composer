@@ -51,7 +51,7 @@
   })
 
   function selectBlock(block: Block){
-    state = stateHelper.setSelected(state, section.findBlock(block))
+    state = stateHelper.setSelected(state, section.findBlock(block)!)
   }
 
   function showContextMenu(block: Block) {
@@ -66,7 +66,6 @@
 <svelte:window 
   on:keydown={keydown} 
   on:wheel|nonpassive={wheel} 
-  on:click={clickOutside} 
 />
 
 <ContextMenu bind:this={contextMenu}>
@@ -86,7 +85,7 @@
 
 <input class='sectionName' bind:value={section.name} />
 
-<div class='section' style='height: {section.duration * blockHeight}rem'>
+<div class='section' on:click={clickOutside} style='height: {section.duration * blockHeight}rem'>
   <div class='tracks'>
     {#each section.tracks as track (track)}
       <div class='track'>

@@ -1,7 +1,7 @@
 import { onDestroy } from "svelte";
 import { readable } from "svelte/store";
 
-export default function useEvent<T>(initial: T) {
+export default function useEvent<T>(initial?: T) {
   let emit: (x: T) => void
   
   const event = readable(initial, (set) => {

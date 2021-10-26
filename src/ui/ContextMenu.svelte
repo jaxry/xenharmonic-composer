@@ -18,7 +18,7 @@
   let visible = false
   let x: number
   let y: number
-  let parent: {width: number, height: number}
+  let parent: {width: number, height: number} | undefined
 
   export function hide(delay = 0) {
     if (visible) {
@@ -35,7 +35,7 @@
     visible = true
 
     // if a ContextMenu creates other ContextMenus, we don't want to hide the main menu if the submenus are clicked
-    document.querySelector('main').addEventListener('click', (e) => {
+    document.querySelector('main')!.addEventListener('click', (e) => {
       hide()
     }, { once: true })
   }
@@ -44,14 +44,14 @@
     return visible
   }
 
-  const pointerEnterEvent = useEvent<HTMLElement>(null)
+  const pointerEnterEvent = useEvent<HTMLElement>()
 
   context.set({
     onPointerEnter: pointerEnterEvent.subscribe,
     hide
   })
 
-  let lastElem: HTMLElement = null
+  let lastElem: HTMLElement | null = null
   function pointerMove(e: PointerEvent) {
     if (lastElem !== e.target) {
       lastElem = e.target as HTMLElement

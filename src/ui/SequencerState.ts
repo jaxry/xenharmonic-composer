@@ -20,7 +20,7 @@ export interface SectionNode {
   tempo: number
 }
 
-export function initialState(composition: Composition) {
+export function initialState(composition: Composition) : SequencerState {
   return {
     composition,
     sectionStack: [{
@@ -67,11 +67,12 @@ export function drillIntoSection(state: SequencerState, location: BlockLocationW
 }
 
 export function leaveSection(state: SequencerState) {
-  if (state.sectionStack.length <= 1) {
+  const parentBlock = last(state.sectionStack).parentBlock
+
+  if (!parentBlock) {
     return state
   }
 
-  const parentBlock = last(state.sectionStack).parentBlock
   const sectionStack = state.sectionStack.slice(0, state.sectionStack.length - 1)
   const section = last(sectionStack).section
 
