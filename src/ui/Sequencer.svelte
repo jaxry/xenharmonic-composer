@@ -83,30 +83,32 @@
   <ContextMenuAction action={() => console.log('three')}>Another</ContextMenuAction>
 </ContextMenu>
 
-<input class='sectionName' bind:value={section.name} />
+<div on:click={clickOutside}>
+  <input class='sectionName' bind:value={section.name} />
 
-<div class='section' on:click={clickOutside} style='height: {section.duration * blockHeight}rem'>
-  <div class='tracks'>
-    {#each section.tracks as track (track)}
-      <div class='track'>
-        {#each track.chains as chain (chain)}
-          <div class='chain' style='top: {chain.beginning * blockHeight}rem' on:click={clickInside}>
-            {#each chain.blocks as block (block)}
-              <BlockComponent
-                {block}
-                {blockHeight}
-                isSelected={stateHelper.selectedBlock(state) === block}
-                on:click={() => selectBlock(block)}
-                on:contextmenu={showContextMenu(block)} 
-              />
-            {/each}
-          </div>
-        {/each}
-      </div>
-    {/each}
+  <div class='section' style='height: {section.duration * blockHeight}rem'>
+    <div class='tracks'>
+      {#each section.tracks as track (track)}
+        <div class='track'>
+          {#each track.chains as chain (chain)}
+            <div class='chain' style='top: {chain.beginning * blockHeight}rem' on:click={clickInside}>
+              {#each chain.blocks as block (block)}
+                <BlockComponent
+                  {block}
+                  {blockHeight}
+                  isSelected={stateHelper.selectedBlock(state) === block}
+                  on:click={() => selectBlock(block)}
+                  on:contextmenu={showContextMenu(block)} 
+                />
+              {/each}
+            </div>
+          {/each}
+        </div>
+      {/each}
+    </div>
+  
+    <Modulations {state} {blockHeight} />
   </div>
-
-  <Modulations {state} {blockHeight} />
 </div>
 
 <style>

@@ -19,18 +19,16 @@ export default class Composition {
       new Interval(0),
       new Interval(1),
       new Interval(-1),
-      new Interval(0, 1),
-      new Interval(0, -1),
-      new Interval(1, -1),
-      new Interval(-1, 1),
-      new Interval(1, 1),
-      new Interval(-1, -1),
       new Interval(2),
       new Interval(-2),
+      new Interval(0, 1),
+      new Interval(0, -1),
+      new Interval(1, 1),
+      new Interval(-1, -1),
+      new Interval(1, -1),
+      new Interval(-1, 1),
       new Interval(2, 1),
-      new Interval(-2, -1),
-      new Interval(0, 0, 1),
-      new Interval(0, 0, -1)
+      new Interval(-2, -1)
     )
     
     this.sortIntervals()

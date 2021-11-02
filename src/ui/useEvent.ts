@@ -1,11 +1,14 @@
-import { onDestroy } from "svelte";
-import { readable } from "svelte/store";
+import { onDestroy } from "svelte"
+import { readable } from "svelte/store"
 
 export default function useEvent<T>(initial?: T) {
-  let emit: (x: T) => void
+  let emit: null | ((x: T) => void) = null
   
   const event = readable(initial, (set) => {
     emit = set
+    return () => {
+      emit = null
+    }
   })
 
   function subscribe(callback: (x: T) => void) {
