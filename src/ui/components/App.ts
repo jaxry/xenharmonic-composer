@@ -1,9 +1,9 @@
 import Component from './Component'
 import { makeStyle } from '../makeStyle'
 import '../preflight.css'
-import colors from '../colors'
 import PianoRoll from './PianoRoll'
 import playNotes from '../../playNotes'
+import { backgroundColor } from '../theme'
 
 export default class App extends Component {
   notes: Set<Note> = new Set()
@@ -27,8 +27,11 @@ export default class App extends Component {
 makeStyle('body', {
   fontFamily: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`,
   colorScheme: `dark`,
-  background: colors.zinc[900],
-  color: colors.zinc[200],
+  background: backgroundColor[900],
+  color: backgroundColor[200],
   height: `100vh`,
   overflow: `hidden`,
+  display: `flex`,
+  flexDirection: `column`,
+  justifyContent: `center`,
 })

@@ -1,12 +1,17 @@
 export default function makeDraggable (
-    element: HTMLElement, onDrag: (e: PointerEvent) => void) {
+    element: HTMLElement, onDrag: (e: PointerEvent) => void,
+    onDown?: (e: PointerEvent) => void, onUp?: (e: PointerEvent) => void) {
 
-  function down () {
+  function down (e: PointerEvent) {
     document.body.addEventListener('pointermove', onDrag)
+    window.addEventListener('pointerup', up, { once: true })
 
-    window.addEventListener('pointerup', () => {
-      document.body.removeEventListener('pointermove', onDrag)
-    }, { once: true })
+    onDown?.(e)
+  }
+
+  function up (e: PointerEvent) {
+    document.body.removeEventListener('pointermove', onDrag)
+    onUp?.(e)
   }
 
   element.addEventListener('pointerdown', down)

@@ -23,10 +23,10 @@ function playNote (note: Note, currentTime: number) {
   src.start(noteTime)
 
   gain.gain.setValueAtTime(0, noteTime)
-  gain.gain.linearRampToValueAtTime(0.25, noteTime + 0.01)
+  gain.gain.linearRampToValueAtTime(0.1, noteTime + 0.01)
 
-  const endTime = noteTime + 0.5
+  const endTime = noteTime + 0.01
 
-  gain.gain.setTargetAtTime(0, endTime, 0.1)
-  src.stop(endTime + 0.1 * 5)
+  gain.gain.setTargetAtTime(0, endTime, 0.3)
+  src.stop(endTime + 0.3 * 5)
 }
