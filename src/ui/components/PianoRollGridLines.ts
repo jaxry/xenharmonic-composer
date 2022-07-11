@@ -2,8 +2,8 @@ import Component from './Component'
 import { makeStyle } from '../makeStyle'
 import { backgroundColor } from '../theme'
 import { mod } from '../../util'
-import getScaleAndTranslation from '../getScaleAndTranslation'
 import Fraction from '../../Fraction'
+import { PianoRollTransform } from './PianoRoll'
 
 export default class PianoRollGridLines extends Component {
   canvas: HTMLCanvasElement
@@ -26,22 +26,25 @@ export default class PianoRollGridLines extends Component {
     this.canvas.width = this.width * devicePixelRatio
     this.canvas.height = this.height * devicePixelRatio
     this.ctx.scale(devicePixelRatio, devicePixelRatio)
+
+    // move coordinate origin to bottom left to mimic cartesian coords
+    this.ctx.translate(0, this.height)
+    this.ctx.scale(1, -1)
   }
 
-  draw (beatsPerUnit: number, scale: Fraction[], transform: DOMMatrix) {
+  draw (
+      beatsPerUnit: number, scale: Fraction[], transform: PianoRollTransform) {
     this.resize()
 
     const w = this.width
     const h = this.height
 
-    const { tx, ty, sx, sy } = getScaleAndTranslation(transform)
-
-    // draw time beat (sub-unit) lines
-    const beatCount = beatsPerUnit / sx
-
+    // draw beat (sub-unit) lines
+    const beatCount = transform.spanX * beatsPerUnit
     this.ctx.beginPath()
-    for (let i = 0; i <= beatCount; i++) {
-      const x = i / beatCount * w + mod(tx, w / beatCount)
+    for (let i = 0; i < beatCount; i++) {
+      const x = (i / beatCount +
+          mod(-transform.translationX, 1 / beatsPerUnit) / transform.spanX) * w
       this.ctx.moveTo(x, 0)
       this.ctx.lineTo(x, h)
     }
@@ -50,10 +53,11 @@ export default class PianoRollGridLines extends Component {
     this.ctx.stroke()
 
     // draw time unit lines
-    const unitCount = 1 / sx
+    const unitCount = transform.spanX
     this.ctx.beginPath()
-    for (let i = 0; i <= unitCount; i++) {
-      const x = i / unitCount * w + mod(tx, w / unitCount)
+    for (let i = 0; i < unitCount; i++) {
+      const x = (i / unitCount +
+          mod(-transform.translationX, 1) / transform.spanX) * w
       this.ctx.moveTo(x, 0)
       this.ctx.lineTo(x, h)
     }
@@ -62,31 +66,25 @@ export default class PianoRollGridLines extends Component {
     this.ctx.stroke()
 
     // draw pitch lines
-
-    // the y position of the highest root note of the top octave
-    const start = Math.ceil(ty / h / sy)
-
-    // the y position of the bottom of the canvas
-    const to = (ty - h) / h / sy
-
-    for (let offset = start; offset > to; offset--) {
-      this.ctx.beginPath()
-      const pitchCount = scale.length
-      for (let i = 0; i < pitchCount; i++) {
-        const y = (1 - (Math.log2(scale[i].number) + offset)) * sy * h + ty
+    this.ctx.beginPath()
+    for (let offset = -1; offset < transform.spanY; offset++) {
+      for (const pitch of scale) {
+        const y = (offset + Math.log2(pitch.number) +
+            mod(-transform.translationY, 1)) / transform.spanY * h
         this.ctx.moveTo(0, y)
         this.ctx.lineTo(w, y)
       }
-      this.ctx.lineWidth = 1
-      this.ctx.strokeStyle = backgroundColor['700']
-      this.ctx.stroke()
     }
+    this.ctx.lineWidth = 1
+    this.ctx.strokeStyle = backgroundColor['700']
+    this.ctx.stroke()
 
     // draw octave lines
     this.ctx.beginPath()
-    const octaveCount = 1 / sy
+    const octaveCount = transform.spanY
     for (let i = 0; i <= octaveCount; i++) {
-      const y = i / octaveCount * h + mod(ty, h / octaveCount)
+      const y = (i / octaveCount +
+          mod(-transform.translationY, 1) / transform.spanY) * h
       this.ctx.moveTo(0, y)
       this.ctx.lineTo(w, y)
     }
