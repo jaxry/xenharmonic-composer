@@ -11,7 +11,6 @@ export default class PianoRollBlock extends Component {
     super()
     this.element.classList.add(containerStyle)
     this.addDragging()
-    this.element.textContent = `C`
   }
 
   setPosition (x: number, y: number) {
@@ -39,7 +38,7 @@ const containerStyle = makeStyle({
   position: `absolute`,
   top: `0`,
   left: `0`,
-  width: `2.5rem`,
+  width: `4rem`,
   height: `1.5rem`,
   background: colors.green[300],
   cursor: `grab`,

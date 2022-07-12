@@ -5,6 +5,7 @@ import { border, borderRadius } from '../theme'
 import PianoRollGridLines from './PianoRollGridLines'
 import Fraction from '../../Fraction'
 import makeDraggable from '../makeDraggable'
+import { clamp } from '../../util'
 
 export default class PianoRoll extends Component {
   gridLines: PianoRollGridLines
@@ -30,7 +31,6 @@ export default class PianoRoll extends Component {
 
     this.element.classList.add(containerStyle)
 
-    this.blockContainer.classList.add(blockContainerStyle)
     this.element.append(this.blockContainer)
 
     this.gridLines = this.newComponent(PianoRollGridLines)
@@ -39,7 +39,7 @@ export default class PianoRoll extends Component {
     this.addMouseBehavior()
 
     setTimeout(() => {
-      this.drawGrid()
+      this.drawPianoRoll()
     })
   }
 
@@ -50,7 +50,7 @@ export default class PianoRoll extends Component {
         (e, mx, my) => {
           this.transform.translationX -= this.transform.spanX * mx / rect.width
           this.transform.translationY += this.transform.spanY * my / rect.height
-          this.drawGrid()
+          this.drawPianoRoll()
         }, (e) => {
           if (e.button !== 1) {
             return false
@@ -69,14 +69,12 @@ export default class PianoRoll extends Component {
       const mx = (e.clientX - left) / width
 
       // the mouse position should point to the same location in the model before and after the scale
-      // old mouse-model position = new mouse-model position =>
-      // oldTranslation + mouse * oldSpan = newTranslation + mouse * newSpan
+      // oldTranslation + oldSpan * mouse = newTranslation + newSpan * mouse
       // solve for newTranslation
       this.transform.translationX += mx * this.transform.spanX * (1 - change)
       this.transform.spanX *= change
 
-      // this.transform.spanY *= change
-      this.drawGrid()
+      this.drawPianoRoll()
     })
 
     this.element.addEventListener('pointerdown', (e) => {
@@ -87,9 +85,14 @@ export default class PianoRoll extends Component {
     })
   }
 
-  private drawGrid () {
+  private drawPianoRoll () {
+    this.transform.translationX = clamp(this.transform.translationX, 0, 64)
+    this.transform.translationY = clamp(this.transform.translationY, -3, 1)
     this.gridLines.draw(this.beatsPerUnit, this.scale, this.transform)
-    this.updateBlockPositions()
+    const rect = this.element.getBoundingClientRect()
+    for (const block of this.blocks) {
+      this.drawBlock(block, rect)
+    }
   }
 
   private addNote (x: number, y: number) {
@@ -109,20 +112,16 @@ export default class PianoRoll extends Component {
 
   private setBlockPosition (
       block: PianoRollBlock, mouseX: number, mouseY: number) {
-    const { left, width, bottom, height } = this.element.getBoundingClientRect()
+    const rect = this.element.getBoundingClientRect()
+    const { left, width, bottom, height } = rect
 
     const time = this.transform.translationX +
-        (mouseX - left) / width * this.transform.spanX
+        this.transform.spanX * (mouseX - left) / width
 
-    const quantizedTime = Math.round(time * this.beatsPerUnit) /
-        this.beatsPerUnit
-
-    block.note.time = quantizedTime
-    const x = (quantizedTime - this.transform.translationX) /
-        this.transform.spanX * width
+    block.note.time = Math.round(time * this.beatsPerUnit) / this.beatsPerUnit
 
     const logPitch = this.transform.translationY +
-        (bottom - mouseY) / height * this.transform.spanY
+        this.transform.spanY * (bottom - mouseY) / height
 
     const octave = Math.floor(logPitch)
 
@@ -135,22 +134,21 @@ export default class PianoRoll extends Component {
 
     block.note.pitch = quantizedPitch
 
-    const y = height -
-        ((Math.log2(quantizedPitch) - this.transform.translationY) /
-            this.transform.spanY * height)
+    block.element.textContent = quantizedRelativePitch.toString()
 
-    block.setPosition(x, y)
+    this.drawBlock(block, rect)
   }
 
-  private updateBlockPositions () {
-    // const { width, height } = this.element.getBoundingClientRect()
-    // const { tx, ty, sx, sy } = getScaleAndTranslation(this.transform)
-    //
-    // for (const block of this.blocks) {
-    //   const x = block.note.time * sx * width + tx
-    //   const y = ty - Math.log2(block.note.pitch) * sy * height
-    //   block.setPosition(x, y)
-    // }
+  private drawBlock (block: PianoRollBlock, { width, height }: DOMRect) {
+    const note = block.note
+
+    const x = (note.time - this.transform.translationX) /
+        this.transform.spanX * width
+
+    const y = (Math.log2(note.pitch) - this.transform.translationY) /
+        this.transform.spanY * height
+
+    block.setPosition(x, height - y)
   }
 }
 
@@ -162,10 +160,6 @@ const containerStyle = makeStyle({
   border,
   borderRadius,
   userSelect: `none`,
-})
-
-const blockContainerStyle = makeStyle({
-  transformOrigin: `bottom left`,
 })
 
 const scale = [
