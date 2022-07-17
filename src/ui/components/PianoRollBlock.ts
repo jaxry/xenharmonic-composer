@@ -41,6 +41,6 @@ const containerStyle = makeStyle({
   width: `4rem`,
   height: `1.5rem`,
   background: colors.green[300],
-  cursor: `grab`,
+  cursor: `move`,
   color: backgroundColor['700'],
 })

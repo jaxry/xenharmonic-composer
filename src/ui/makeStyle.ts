@@ -10,8 +10,8 @@ type Style = Partial<CSSStyleDeclaration>
 const sheet = makeStyleSheet()
 let nextId = 1
 
-function makeStyleClass (style?: Style, name?: string): string {
-  const className = `${name ?? `makeStyle`}-${nextId++}`
+function makeStyleClass (style?: Style): string {
+  const className = `makeStyle-${nextId++}`
   if (style) {
     const index = sheet.insertRule(`.${className} {}`, sheet.cssRules.length)
     const rule = sheet.cssRules[index] as CSSStyleRule
@@ -30,7 +30,7 @@ function makeStyleSelector (selector: string, style: Style): void {
   }
 }
 
-export function makeStyle (style?: Style, name?: string): string
+export function makeStyle (style?: Style): string
 export function makeStyle (selector: string, style: Style): void
 export function makeStyle (
     selectorOrStyle?: string | Style,
@@ -38,6 +38,6 @@ export function makeStyle (
   if (typeof selectorOrStyle === 'string') {
     makeStyleSelector(selectorOrStyle, styleOrName!)
   } else {
-    return makeStyleClass(selectorOrStyle, styleOrName as string)
+    return makeStyleClass(selectorOrStyle)
   }
 }
