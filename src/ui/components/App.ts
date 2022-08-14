@@ -4,6 +4,7 @@ import '../preflight.css'
 import PianoRoll from './PianoRoll'
 import playNotes from '../../playNotes'
 import { backgroundColor } from '../theme'
+import { Note } from '../../Note'
 
 export default class App extends Component {
   notes: Set<Note> = new Set()

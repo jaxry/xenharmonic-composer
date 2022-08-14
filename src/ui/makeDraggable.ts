@@ -2,18 +2,18 @@ import throttle from './throttle'
 
 export default function makeDraggable (
     element: HTMLElement,
-    onDrag: (e: PointerEvent, movementX: number, movementY: number) => void | false,
-    onDown?: (e: PointerEvent) => void, onUp?: (e: PointerEvent) => void) {
+    onDrag: (e: PointerEvent, movementX: number, movementY: number) => void,
+    onDown?: (e: PointerEvent) => void | false, onUp?: (e: PointerEvent) => void) {
 
   let lastX = 0
   let lastY = 0
 
   function down (e: PointerEvent) {
-    // @ts-ignore
     if (onDown?.(e) === false) {
       return
     }
 
+    e.preventDefault()
     lastX = e.clientX
     lastY = e.clientY
     document.body.addEventListener('pointermove', move)

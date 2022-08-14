@@ -3,6 +3,7 @@ import { makeStyle } from '../makeStyle'
 import colors from '../colors'
 import makeDraggable from '../makeDraggable'
 import { backgroundColor } from '../theme'
+import { Note } from '../../Note'
 
 export default class PianoRollBlock extends Component {
   onDrag?: (x: number, y: number) => void
@@ -38,7 +39,7 @@ const containerStyle = makeStyle({
   position: `absolute`,
   top: `0`,
   left: `0`,
-  width: `4rem`,
+  width: `2rem`,
   height: `1.5rem`,
   background: colors.green[300],
   cursor: `move`,

@@ -1,5 +1,6 @@
 import { squareWave } from './waves'
 import { audioContext } from './audioContext'
+import { Note } from './Note'
 
 export default function playNotes (notes: Set<Note>) {
   const time = audioContext.currentTime
@@ -12,7 +13,7 @@ function playNote (note: Note, currentTime: number) {
   const src = audioContext.createBufferSource()
   src.buffer = squareWave
   src.loop = true
-  src.playbackRate.value = note.pitch
+  src.playbackRate.value = 2 ** note.octave * note.pitch.number
 
   const gain = audioContext.createGain()
   gain.gain.value = 0

@@ -8,10 +8,12 @@ export function clamp (x: number, min: number, max: number) {
 
 export function lerp (
     x0: number, x1: number, y0: number, y1: number, x: number) {
-  let min = Math.min(y0, y1)
-  let max = Math.max(y0, y1)
-  const l = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
-  return Math.min(max, Math.max(l, min))
+  return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+}
+
+export function lerpClamped (
+    x0: number, x1: number, y0: number, y1: number, x: number) {
+  return clamp(lerp(x0, x1, y0, y1, x), Math.min(y0, y1), Math.max(y0, y1))
 }
 
 export function randomElement<T> (array: T[]): T {

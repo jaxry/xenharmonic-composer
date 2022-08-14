@@ -5,7 +5,8 @@ import { border, borderRadius } from '../theme'
 import PianoRollGrid from './PianoRollGrid'
 import Fraction from '../../Fraction'
 import makeDraggable from '../makeDraggable'
-import { clamp, lerp } from '../../util'
+import { lerp } from '../../util'
+import { Note } from '../../Note'
 
 export default class PianoRoll extends Component {
   grid: PianoRollGrid
@@ -13,11 +14,11 @@ export default class PianoRoll extends Component {
   content = document.createElement('div')
   blocks = new Set<PianoRollBlock>()
 
+  units = 8
   beatsPerUnit = 4
 
-  zoomX = 200
-  zoomY = 2500
-  padding = 24
+  unitWidth = 200
+  height = 2500
 
   minFrequency = 30
   maxFrequency = 10030
@@ -35,67 +36,46 @@ export default class PianoRoll extends Component {
     this.content.classList.add(contentStyle)
     this.element.append(this.content)
 
-    this.grid = this.newComponent(PianoRollGrid, scale, this.minFrequency, this.maxFrequency)
+    this.grid = this.newComponent(PianoRollGrid,
+        scale,
+        this.minFrequency, this.maxFrequency,
+        this.units, this.beatsPerUnit)
+
     this.content.append(this.grid.element)
 
     this.addMouseBehavior()
 
-    this.content.style.height = `${this.zoomY}px`
-    this.content.style.width = `${this.zoomX * 8}px`
+    this.content.style.height = `${this.height}px`
+    this.content.style.width = `${this.unitWidth * this.units}px`
 
     setTimeout(() => {
       // this.grid.setZoom(this.zoomX, this.zoomY, this.padding)
+      this.element.scrollTop =
+          this.content.offsetHeight / 2 - this.element.offsetHeight / 2
     })
   }
 
   private addMouseBehavior () {
-    let rect: DOMRect
-    // this.onRemove(makeDraggable(
-    //     this.element,
-    //     (e, mx, my) => {
-    //       this.transform.translationX -= this.transform.spanX * mx / rect.width
-    //       this.transform.translationY += this.transform.spanY * my / rect.height
-    //       this.drawPianoRoll()
-    //     }, (e) => {
-    //       if (e.button !== 1) {
-    //         return false
-    //       }
-    //       rect = this.element.getBoundingClientRect()
-    //     }))
-
-    // this.element.addEventListener('wheel', (e) => {
-    //   e.preventDefault()
-    //
-    //   const amount = 1.10
-    //   const change = Math.sign(e.deltaY) > 0 ? amount : 1 / amount
-    //
-    //   const { left, width } = this.element.getBoundingClientRect()
-    //
-    //   const mx = (e.clientX - left) / width
-    //
-    //   // the mouse position should point to the same location in the model before and after the scale
-    //   // oldTranslation + oldSpan * mouse = newTranslation + newSpan * mouse
-    //   // solve for newTranslation
-    //   this.transform.translationX += mx * this.transform.spanX * (1 - change)
-    //   this.transform.spanX *= change
-    //
-    //   this.drawPianoRoll()
-    // })
+    makeDraggable(this.element,
+        (e, mx, my) => {
+          this.element.scrollLeft -= mx
+          this.element.scrollTop -= my
+        }, (e) => {
+          if (e.button !== 1) {
+            return false
+          }
+        })
 
     this.content.addEventListener('pointerdown', (e) => {
-      // if (e.target !== e.currentTarget || e.button !== 0) {
-      //   return
-      // }
-      // this.addNote(e.clientX, e.clientY)
-      const rect = this.content.getBoundingClientRect()
-      const freqLog = lerp(rect.bottom, rect.top, this.minLogFrequency, this.maxLogFrequency, e.clientY)
-      const freq = Math.exp(freqLog)
-      console.log(freq)
+      if (e.target !== e.currentTarget || e.button !== 0) {
+        return
+      }
+      this.addNote(e.clientX, e.clientY)
     })
   }
 
   private addNote (x: number, y: number) {
-    const note = { pitch: 1, time: 0 }
+    const note = { pitch: new Fraction(), time: 0, octave: 0 }
     this.notes.add(note)
 
     const block = this.newComponent(PianoRollBlock, note)
@@ -106,49 +86,49 @@ export default class PianoRoll extends Component {
     //   this.setBlockPosition(block, mouseX, mouseY)
     // }
     //
-    // this.setBlockPosition(block, x, y)
+    this.setBlockPosition(block, x, y)
   }
 
-  // private setBlockPosition (
-  //     block: PianoRollBlock, mouseX: number, mouseY: number) {
-  //   const rect = this.element.getBoundingClientRect()
-  //   const { left, width, bottom, height } = rect
-  //
-  //   const time = this.transform.translationX +
-  //       this.transform.spanX * (mouseX - left) / width
-  //
-  //   block.note.time = Math.round(time * this.beatsPerUnit) / this.beatsPerUnit
-  //
-  //   const logPitch = this.transform.translationY +
-  //       this.transform.spanY * (bottom - mouseY) / height
-  //
-  //   const octave = Math.floor(logPitch)
-  //
-  //   const quantizedRelativePitch = closest(
-  //       this.scale,
-  //       2 ** (logPitch - octave),
-  //       (pitch) => pitch.number)
-  //
-  //   const quantizedPitch = (2 ** octave) * quantizedRelativePitch.number
-  //
-  //   block.note.pitch = quantizedPitch
-  //
-  //   block.element.textContent = quantizedRelativePitch.toString()
-  //
-  //   this.drawBlock(block, rect)
-  // }
-  //
-  // private drawBlock (block: PianoRollBlock, { width, height }: DOMRect) {
-  //   const note = block.note
-  //
-  //   const x = (note.time - this.transform.translationX) /
-  //       this.transform.spanX * width
-  //
-  //   const y = (Math.log2(note.pitch) - this.transform.translationY) /
-  //       this.transform.spanY * height
-  //
-  //   block.setPosition(x, height - y)
-  // }
+  private setBlockPosition (
+      block: PianoRollBlock, mouseX: number, mouseY: number) {
+    const { left, right, bottom, top, height } = this.content.getBoundingClientRect()
+
+    const time = (mouseX - left) / this.unitWidth
+    const timeQuantized = Math.floor(time * this.beatsPerUnit) / this.beatsPerUnit
+    const x = timeQuantized * this.unitWidth
+
+    const freqLog = lerp(
+        bottom, top,
+        this.minLogFrequency, this.maxLogFrequency,
+        mouseY)
+    const freq = Math.exp(freqLog)
+
+    const rootFreq = 440
+    let octave = Math.floor(Math.log2(freq / rootFreq))
+
+    // number between 1 and 2 representing an unquantized pitch in the scale
+    const pitch = freq / (rootFreq * 2 ** octave)
+
+    let scalePitch = findClosest(scale, pitch, note => note.number)
+
+    // if unquantized pitch is closer to the root note in the above octave,
+    // quantize to that root note instead
+    if (2 - pitch < Math.abs(scalePitch.number - pitch)) {
+      scalePitch = scale[0]
+      octave += 1
+    }
+
+    const quantizedFreq = rootFreq * scalePitch.number * 2 ** octave
+    const y = lerp(
+        this.minLogFrequency, this.maxLogFrequency,
+        height, 0,
+        Math.log(quantizedFreq))
+
+    block.note.pitch = scalePitch
+    block.note.octave = octave
+    block.note.time = timeQuantized
+    block.setPosition(x, y)
+  }
 }
 
 const containerStyle = makeStyle({
@@ -182,8 +162,8 @@ const scale = [
   new Fraction(15, 8),
 ]
 
-function closest<T> (
-    array: T[], target: number, iteratee: (elem: T) => number): T {
+function findClosest<T> (
+    array: T[], target: number, iteratee: (elem: T) => number) {
   return array.reduce((closest, value) => {
     const distance = Math.abs(iteratee(value) - target)
     if (distance < closest.distance) {
