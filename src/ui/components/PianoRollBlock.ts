@@ -8,10 +8,10 @@ import { Note } from '../../Note'
 export default class PianoRollBlock extends Component {
   onDrag?: (x: number, y: number) => void
 
-  constructor (public note: Note) {
+  constructor (public note: Note, pointerEvent: PointerEvent) {
     super()
     this.element.classList.add(containerStyle)
-    this.addDragging()
+    this.addDragging(pointerEvent)
   }
 
   setPosition (x: number, y: number) {
@@ -19,19 +19,23 @@ export default class PianoRollBlock extends Component {
     this.element.style.transform = `translate(${x}px,${y - rect.height / 2}px)`
   }
 
-  private addDragging () {
+  private addDragging (pointerEvent: PointerEvent) {
     let mouseDiffX: number
     let mouseDiffY: number
     let rect: DOMRect
-    this.onRemove(makeDraggable(this.element, (e) => {
+
+    makeDraggable(this.element, (e) => {
       const x = e.clientX - mouseDiffX
       const y = e.clientY - mouseDiffY + rect.height / 2
       this.onDrag?.(x, y)
-    }, (e) => {
-      rect = this.element.getBoundingClientRect()
-      mouseDiffX = e.clientX - rect.x
-      mouseDiffY = e.clientY - rect.y
-    }))
+    }, {
+      onDown: (e) => {
+        rect = this.element.getBoundingClientRect()
+        mouseDiffX = e.clientX - rect.x
+        mouseDiffY = e.clientY - rect.y
+      },
+      startEnabled: pointerEvent,
+    })
   }
 }
 

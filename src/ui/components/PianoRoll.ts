@@ -60,41 +60,41 @@ export default class PianoRoll extends Component {
         (e, mx, my) => {
           this.element.scrollLeft -= mx
           this.element.scrollTop -= my
-        }, (e) => {
-          if (e.button !== 1) {
-            return false
-          }
+        }, {
+          enableWhen: (e) => e.button === 1,
         })
 
     this.content.addEventListener('pointerdown', (e) => {
       if (e.target !== e.currentTarget || e.button !== 0) {
         return
       }
-      this.addNote(e.clientX, e.clientY)
+      this.addNote(e)
     })
   }
 
-  private addNote (x: number, y: number) {
+  private addNote (e: PointerEvent) {
     const note = { pitch: new Fraction(), time: 0, octave: 0 }
     this.notes.add(note)
 
-    const block = this.newComponent(PianoRollBlock, note)
+    const block = this.newComponent(PianoRollBlock, note, e)
     this.blocks.add(block)
     this.content.append(block.element)
 
-    // block.onDrag = (mouseX: number, mouseY: number) => {
-    //   this.setBlockPosition(block, mouseX, mouseY)
-    // }
-    //
-    this.setBlockPosition(block, x, y)
+    block.onDrag = (mouseX: number, mouseY: number) => {
+      this.setBlockPosition(block, mouseX, mouseY, Math.round)
+    }
+
+    this.setBlockPosition(block, e.clientX, e.clientY, Math.floor)
   }
 
   private setBlockPosition (
-      block: PianoRollBlock, mouseX: number, mouseY: number) {
-    const { left, right, bottom, top, height } = this.content.getBoundingClientRect()
+      block: PianoRollBlock, mouseX: number, mouseY: number,
+      quantizeTimeFn: (time: number) => number) {
+    const { left, bottom, top, height } = this.content.getBoundingClientRect()
 
     const time = (mouseX - left) / this.unitWidth
-    const timeQuantized = Math.floor(time * this.beatsPerUnit) / this.beatsPerUnit
+    const timeQuantized = quantizeTimeFn(time * this.beatsPerUnit) /
+        this.beatsPerUnit
     const x = timeQuantized * this.unitWidth
 
     const freqLog = lerp(

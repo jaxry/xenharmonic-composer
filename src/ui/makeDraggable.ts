@@ -3,15 +3,21 @@ import throttle from './throttle'
 export default function makeDraggable (
     element: HTMLElement,
     onDrag: (e: PointerEvent, movementX: number, movementY: number) => void,
-    onDown?: (e: PointerEvent) => void | false, onUp?: (e: PointerEvent) => void) {
+    options?: {
+      onDown?: (e: PointerEvent) => void,
+      onUp?: (e: PointerEvent) => void,
+      enableWhen?: (e: PointerEvent) => boolean,
+      startEnabled?: PointerEvent
+    }) {
 
   let lastX = 0
   let lastY = 0
 
   function down (e: PointerEvent) {
-    if (onDown?.(e) === false) {
+    if (options?.enableWhen?.(e) === false) {
       return
     }
+    options?.onDown?.(e)
 
     e.preventDefault()
     lastX = e.clientX
@@ -20,6 +26,8 @@ export default function makeDraggable (
     window.addEventListener('pointerup', up, { once: true })
   }
 
+  // throttle the mousemove event to the browser's requestAnimationFrame
+  // otherwise even gets triggered way more than necessary
   const move = throttle((e: PointerEvent) => {
     const movementX = e.clientX - lastX
     const movementY = e.clientY - lastY
@@ -30,10 +38,15 @@ export default function makeDraggable (
 
   function up (e: PointerEvent) {
     document.body.removeEventListener('pointermove', move)
-    onUp?.(e)
+    options?.onUp?.(e)
   }
 
   element.addEventListener('pointerdown', down)
+
+  if (options?.startEnabled) {
+    const event = options.startEnabled
+    setTimeout(() => down(event))
+  }
 
   return () => {
     element.removeEventListener('pointerdown', down)

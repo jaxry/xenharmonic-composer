@@ -1,3 +1,5 @@
+type Style = Partial<CSSStyleDeclaration>
+
 function makeStyleSheet () {
   const elem = document.createElement('style')
   elem.setAttribute('type', 'text/css')
@@ -5,9 +7,8 @@ function makeStyleSheet () {
   return elem.sheet!
 }
 
-type Style = Partial<CSSStyleDeclaration>
-
 const sheet = makeStyleSheet()
+
 let nextId = 1
 
 function makeStyleClass (style?: Style): string {
