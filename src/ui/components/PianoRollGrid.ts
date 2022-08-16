@@ -21,7 +21,7 @@ export default class PianoRollGrid extends Component {
     this.svg.setAttribute('height', `100%`)
     this.svg.setAttribute('preserveAspectRatio', `none`)
 
-    this.svg.setAttribute(`viewBox`, `0 0 8 100`)
+    this.svg.setAttribute(`viewBox`, `0 0 8 1`)
 
     this.svg.append(this.lines)
 
@@ -36,12 +36,12 @@ export default class PianoRollGrid extends Component {
       for (const pitch of scale) {
         const freq = f * pitch.number
 
-        const y = lerp(minLogFrequency, maxLogFrequency, 100, 0, Math.log(freq))
+        const y = lerp(minLogFrequency, maxLogFrequency, 1, 0, Math.log(freq))
             .toString()
 
         const line = createSVG('line')
         line.setAttribute('x1', `0`)
-        line.setAttribute('x2', `99`)
+        line.setAttribute('x2', `100%`)
         line.setAttribute('y1', y)
         line.setAttribute('y2', y)
         line.classList.add(pitch.number === 1 ? octaveStyle : pitchStyle)
@@ -56,7 +56,7 @@ export default class PianoRollGrid extends Component {
       line.setAttribute('x1', x)
       line.setAttribute('x2', x)
       line.setAttribute('y1', `0`)
-      line.setAttribute('y2', `100`)
+      line.setAttribute('y2', `1`)
       line.classList.add(i % beatsPerUnit === 0 ? unitStyle : beatStyle)
       this.lines.append(line)
     }

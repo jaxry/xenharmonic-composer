@@ -20,8 +20,10 @@ export default function makeDraggable (
     options?.onDown?.(e)
 
     e.preventDefault()
+
     lastX = e.clientX
     lastY = e.clientY
+
     document.body.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up, { once: true })
   }

@@ -17,11 +17,12 @@ export default class PianoRoll extends Component {
   units = 8
   beatsPerUnit = 4
 
+  // change these for user zoom controls
   unitWidth = 200
-  height = 2500
+  octaveHeight = 350
 
   minFrequency = 30
-  maxFrequency = 10030
+  maxFrequency = 5000
 
   minLogFrequency = Math.log(this.minFrequency)
   maxLogFrequency = Math.log(this.maxFrequency)
@@ -45,7 +46,8 @@ export default class PianoRoll extends Component {
 
     this.addMouseBehavior()
 
-    this.content.style.height = `${this.height}px`
+    const totalHeight = this.octaveHeight * Math.log2(this.maxFrequency / this.minFrequency)
+    this.content.style.height = `${Math.round(totalHeight)}px`
     this.content.style.width = `${this.unitWidth * this.units}px`
 
     setTimeout(() => {
@@ -80,16 +82,18 @@ export default class PianoRoll extends Component {
     this.blocks.add(block)
     this.content.append(block.element)
 
-    block.onDrag = (mouseX: number, mouseY: number) => {
-      this.setBlockPosition(block, mouseX, mouseY, Math.round)
-    }
+    block.setHeight(this.octaveHeight / 18)
+    block.setWidth(this.unitWidth / this.beatsPerUnit)
+
+    block.onDrag = this.setBlockPosition
+    block.onDragEdge = this.setBlockTime
 
     this.setBlockPosition(block, e.clientX, e.clientY, Math.floor)
   }
 
-  private setBlockPosition (
+  private setBlockPosition = (
       block: PianoRollBlock, mouseX: number, mouseY: number,
-      quantizeTimeFn: (time: number) => number) {
+      quantizeTimeFn = Math.round) => {
     const { left, bottom, top, height } = this.content.getBoundingClientRect()
 
     const time = (mouseX - left) / this.unitWidth
@@ -113,7 +117,7 @@ export default class PianoRoll extends Component {
 
     // if unquantized pitch is closer to the root note in the above octave,
     // quantize to that root note instead
-    if (2 - pitch < Math.abs(scalePitch.number - pitch)) {
+    if (2 * scale[0].number - pitch < Math.abs(scalePitch.number - pitch)) {
       scalePitch = scale[0]
       octave += 1
     }
@@ -128,6 +132,20 @@ export default class PianoRoll extends Component {
     block.note.octave = octave
     block.note.time = timeQuantized
     block.setPosition(x, y)
+  }
+
+  private setBlockTime = (block: PianoRollBlock, mouseX: number) => {
+    const { left } = this.content.getBoundingClientRect()
+    const endTime = (mouseX - left) / this.unitWidth
+    const endTimeQuantized = Math.round(endTime * this.beatsPerUnit) /
+        this.beatsPerUnit
+
+    const startTime = block.note.time
+
+    if (endTimeQuantized - startTime !== 0) {
+      const width = (endTimeQuantized - startTime) * this.unitWidth
+      block.setWidth(width)
+    }
   }
 }
 
