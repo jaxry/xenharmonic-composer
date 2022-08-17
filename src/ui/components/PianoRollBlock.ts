@@ -23,10 +23,6 @@ export default class PianoRollBlock extends Component {
     this.element.style.width = `${Math.round(width)}px`
   }
 
-  setHeight (height: number) {
-    this.element.style.height = `${Math.round(height)}px`
-  }
-
   private addDragBehavior (pointerEvent: PointerEvent) {
     let mouseDiffX: number
     let mouseDiffY: number
@@ -65,6 +61,7 @@ const containerStyle = makeStyle({
   position: `absolute`,
   top: `0`,
   left: `0`,
+  height: `var(--blockHeight)`,
   background: colors.green[300],
   borderRadius: '0.25rem',
   cursor: `move`,

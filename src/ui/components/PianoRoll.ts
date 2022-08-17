@@ -9,8 +9,6 @@ import { lerp } from '../../util'
 import { Note } from '../../Note'
 
 export default class PianoRoll extends Component {
-  grid: PianoRollGrid
-
   content = document.createElement('div')
   blocks = new Set<PianoRollBlock>()
 
@@ -23,11 +21,17 @@ export default class PianoRoll extends Component {
 
   minFrequency = 30
   maxFrequency = 5000
-
   minLogFrequency = Math.log(this.minFrequency)
   maxLogFrequency = Math.log(this.maxFrequency)
 
   scale = scale
+
+  grid: PianoRollGrid
+
+  modulations: {
+    time: number,
+    interval: Fraction
+  }[] = []
 
   constructor (public notes: Set<Note>) {
     super()
@@ -37,10 +41,15 @@ export default class PianoRoll extends Component {
     this.content.classList.add(contentStyle)
     this.element.append(this.content)
 
-    this.grid = this.newComponent(PianoRollGrid,
-        scale,
-        this.minFrequency, this.maxFrequency,
-        this.units, this.beatsPerUnit)
+    this.modulations.push({
+      time: 2,
+      interval: this.scale[8]
+    }, {
+      time: 3,
+      interval: this.scale[8]
+    })
+
+    this.grid = this.newComponent(PianoRollGrid, this)
 
     this.content.append(this.grid.element)
 
@@ -49,6 +58,8 @@ export default class PianoRoll extends Component {
     const totalHeight = this.octaveHeight * Math.log2(this.maxFrequency / this.minFrequency)
     this.content.style.height = `${Math.round(totalHeight)}px`
     this.content.style.width = `${this.unitWidth * this.units}px`
+    this.content.style.setProperty('--blockHeight',
+        `${Math.round(this.octaveHeight / 18)}px`)
 
     setTimeout(() => {
       // this.grid.setZoom(this.zoomX, this.zoomY, this.padding)
@@ -82,7 +93,6 @@ export default class PianoRoll extends Component {
     this.blocks.add(block)
     this.content.append(block.element)
 
-    block.setHeight(this.octaveHeight / 18)
     block.setWidth(this.unitWidth / this.beatsPerUnit)
 
     block.onDrag = this.setBlockPosition
@@ -130,7 +140,7 @@ export default class PianoRoll extends Component {
 
     block.note.pitch = scalePitch
     block.note.octave = octave
-    block.note.time = timeQuantized
+    block.note.startTime = timeQuantized
     block.setPosition(x, y)
   }
 
@@ -140,7 +150,7 @@ export default class PianoRoll extends Component {
     const endTimeQuantized = Math.round(endTime * this.beatsPerUnit) /
         this.beatsPerUnit
 
-    const startTime = block.note.time
+    const startTime = block.note.startTime
 
     if (endTimeQuantized - startTime !== 0) {
       const width = (endTimeQuantized - startTime) * this.unitWidth

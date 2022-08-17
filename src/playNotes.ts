@@ -19,7 +19,7 @@ function playNote (note: Note, currentTime: number) {
   gain.gain.value = 0
   src.connect(gain).connect(audioContext.destination)
 
-  const noteTime = currentTime + note.time
+  const noteTime = currentTime + note.startTime
 
   src.start(noteTime)
 
