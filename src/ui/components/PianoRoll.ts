@@ -5,8 +5,10 @@ import { border, borderRadius } from '../theme'
 import PianoRollGrid from './PianoRollGrid'
 import Fraction from '../../Fraction'
 import makeDraggable from '../makeDraggable'
-import { lerp } from '../../util'
 import { Note } from '../../Note'
+import { lerp } from '../../math'
+import { findClosest } from '../../util'
+import { Modulation } from '../../modulation'
 
 export default class PianoRoll extends Component {
   content = document.createElement('div')
@@ -28,10 +30,7 @@ export default class PianoRoll extends Component {
 
   grid: PianoRollGrid
 
-  modulations: {
-    time: number,
-    interval: Fraction
-  }[] = []
+  modulations: Modulation[] = []
 
   constructor (public notes: Set<Note>) {
     super()
@@ -43,10 +42,10 @@ export default class PianoRoll extends Component {
 
     this.modulations.push({
       time: 2,
-      interval: this.scale[8]
+      interval: this.scale[8],
     }, {
       time: 3,
-      interval: this.scale[8]
+      interval: this.scale[8],
     })
 
     this.grid = this.newComponent(PianoRollGrid, this)
@@ -55,7 +54,8 @@ export default class PianoRoll extends Component {
 
     this.addMouseBehavior()
 
-    const totalHeight = this.octaveHeight * Math.log2(this.maxFrequency / this.minFrequency)
+    const totalHeight = this.octaveHeight *
+        Math.log2(this.maxFrequency / this.minFrequency)
     this.content.style.height = `${Math.round(totalHeight)}px`
     this.content.style.width = `${this.unitWidth * this.units}px`
     this.content.style.setProperty('--blockHeight',
@@ -86,14 +86,19 @@ export default class PianoRoll extends Component {
   }
 
   private addNote (e: PointerEvent) {
-    const note = { pitch: new Fraction(), time: 0, octave: 0 }
+    const note = {
+      pitch: new Fraction(),
+      startTime: 0,
+      octave: 0,
+      duration: 1 / this.beatsPerUnit,
+    }
     this.notes.add(note)
 
     const block = this.newComponent(PianoRollBlock, note, e)
     this.blocks.add(block)
     this.content.append(block.element)
 
-    block.setWidth(this.unitWidth / this.beatsPerUnit)
+    block.setWidth(this.unitWidth * note.duration)
 
     block.onDrag = this.setBlockPosition
     block.onDragEdge = this.setBlockTime
@@ -190,14 +195,3 @@ const scale = [
   new Fraction(15, 8),
 ]
 
-function findClosest<T> (
-    array: T[], target: number, iteratee: (elem: T) => number) {
-  return array.reduce((closest, value) => {
-    const distance = Math.abs(iteratee(value) - target)
-    if (distance < closest.distance) {
-      closest.distance = distance
-      closest.value = value
-    }
-    return closest
-  }, { value: array[0], distance: Infinity }).value
-}

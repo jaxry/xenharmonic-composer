@@ -16,7 +16,8 @@ export default class PianoRollBlock extends Component {
   }
 
   setPosition (x: number, y: number) {
-    this.element.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px) translate(0, -50%)`
+    this.element.style.transform =
+        `translate(${Math.round(x)}px,${Math.round(y)}px) translate(0, -50%)`
   }
 
   setWidth (width: number) {
@@ -52,7 +53,7 @@ export default class PianoRollBlock extends Component {
         rect = edge.getBoundingClientRect()
         mouseDiffX = e.clientX - rect.right
         e.stopPropagation()
-      }
+      },
     })
   }
 }
@@ -74,5 +75,5 @@ const edgeStyle = makeStyle({
   right: `0`,
   bottom: `0`,
   width: `0.5rem`,
-  cursor: `ew-resize`
+  cursor: `ew-resize`,
 })

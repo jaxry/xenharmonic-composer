@@ -2,8 +2,11 @@ import Component from './Component'
 import { makeStyle } from '../makeStyle'
 import createSVG from '../createSVG'
 import colors from '../colors'
-import { lerp } from '../../util'
 import PianoRoll from './PianoRoll'
+import { lerp } from '../../math'
+import { removeChildren } from '../../util'
+import Fraction from '../../Fraction'
+import { modulateByInterval } from '../../modulation'
 
 export default class PianoRollGrid extends Component {
   svg = createSVG('svg')
@@ -17,36 +20,31 @@ export default class PianoRollGrid extends Component {
     this.svg.setAttribute('width', `100%`)
     this.svg.setAttribute('height', `100%`)
     this.svg.setAttribute('preserveAspectRatio', `none`)
-
     this.svg.setAttribute(`viewBox`, `0 0 8 1`)
 
     this.svg.append(this.lines)
 
+    this.redraw()
+  }
+
+  redraw() {
+    removeChildren(this.lines)
+
+    this.addBeats()
+
     let rootFreq = 440
     let currentTime = 0
 
-    for (const modulation of pianoRoll.modulations) {
+    for (const modulation of this.pianoRoll.modulations) {
       this.addPitches(rootFreq, currentTime, modulation.time)
-      rootFreq *= modulation.interval.number
+      rootFreq = modulateByInterval(rootFreq, modulation.interval)
       currentTime = modulation.time
     }
 
     this.addPitches(rootFreq, currentTime)
-
-    const lines = pianoRoll.units * pianoRoll.beatsPerUnit
-    for (let i = 0; i < lines; i++) {
-      const x = (i / pianoRoll.beatsPerUnit).toString()
-      const line = createSVG('line')
-      line.setAttribute('x1', x)
-      line.setAttribute('x2', x)
-      line.setAttribute('y1', `0`)
-      line.setAttribute('y2', `1`)
-      line.classList.add(i % pianoRoll.beatsPerUnit === 0 ? unitStyle : beatStyle)
-      this.lines.append(line)
-    }
   }
 
-  private addPitches(rootFreq: number, fromTime: number, toTime?: number) {
+  private addPitches (rootFreq: number, fromTime: number, toTime?: number) {
     const startFreq = rootFreq * 2 **
         (Math.floor(Math.log2(this.pianoRoll.minFrequency / rootFreq)))
 
@@ -66,6 +64,21 @@ export default class PianoRollGrid extends Component {
         line.classList.add(pitch.number === 1 ? octaveStyle : pitchStyle)
         this.lines.append(line)
       }
+    }
+  }
+
+  private addBeats () {
+    const lines = this.pianoRoll.units * this.pianoRoll.beatsPerUnit
+    for (let i = 0; i < lines; i++) {
+      const x = (i / this.pianoRoll.beatsPerUnit).toString()
+      const line = createSVG('line')
+      line.setAttribute('x1', x)
+      line.setAttribute('x2', x)
+      line.setAttribute('y1', `0`)
+      line.setAttribute('y2', `1`)
+      line.classList.add(
+          i % this.pianoRoll.beatsPerUnit === 0 ? unitStyle : beatStyle)
+      this.lines.append(line)
     }
   }
 

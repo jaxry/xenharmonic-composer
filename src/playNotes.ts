@@ -1,6 +1,7 @@
 import { squareWave } from './waves'
 import { audioContext } from './audioContext'
 import { Note } from './Note'
+import Fraction from './Fraction'
 
 export default function playNotes (notes: Set<Note>) {
   const time = audioContext.currentTime
