@@ -1,20 +1,22 @@
 import { squareWave } from './waves'
 import { audioContext } from './audioContext'
 import { Note } from './Note'
-import Fraction from './Fraction'
+import { Modulation, totalModulationAtTime } from './modulation'
 
-export default function playNotes (notes: Set<Note>) {
+export default function playNotes (
+    notes: Set<Note>, modulations: Modulation[]) {
   const time = audioContext.currentTime
+
   for (const note of notes) {
-    playNote(note, time)
+    playNote(note, time, totalModulationAtTime(modulations, note.startTime))
   }
 }
 
-function playNote (note: Note, currentTime: number) {
+function playNote (note: Note, currentTime: number, modulation: number) {
   const src = audioContext.createBufferSource()
   src.buffer = squareWave
   src.loop = true
-  src.playbackRate.value = 2 ** note.octave * note.pitch.number
+  src.playbackRate.value = 2 ** note.octave * note.pitch.number * modulation
 
   const gain = audioContext.createGain()
   gain.gain.value = 0

@@ -8,7 +8,7 @@ import makeDraggable from '../makeDraggable'
 import { Note } from '../../Note'
 import { lerp } from '../../math'
 import { findClosest } from '../../util'
-import { Modulation } from '../../modulation'
+import { Modulation, totalModulationAtTime } from '../../modulation'
 
 export default class PianoRoll extends Component {
   content = document.createElement('div')
@@ -30,9 +30,7 @@ export default class PianoRoll extends Component {
 
   grid: PianoRollGrid
 
-  modulations: Modulation[] = []
-
-  constructor (public notes: Set<Note>) {
+  constructor (public notes: Set<Note>, public modulations: Modulation[]) {
     super()
 
     this.element.classList.add(containerStyle)
@@ -42,10 +40,10 @@ export default class PianoRoll extends Component {
 
     this.modulations.push({
       time: 2,
-      interval: this.scale[8],
+      interval: this.scale[1],
     }, {
       time: 3,
-      interval: this.scale[8],
+      interval: this.scale[1],
     })
 
     this.grid = this.newComponent(PianoRollGrid, this)
@@ -115,6 +113,7 @@ export default class PianoRoll extends Component {
     const timeQuantized = quantizeTimeFn(time * this.beatsPerUnit) /
         this.beatsPerUnit
     const x = timeQuantized * this.unitWidth
+    block.note.startTime = timeQuantized
 
     const freqLog = lerp(
         bottom, top,
@@ -122,7 +121,9 @@ export default class PianoRoll extends Component {
         mouseY)
     const freq = Math.exp(freqLog)
 
-    const rootFreq = 440
+    const rootFreq = 440 *
+        totalModulationAtTime(this.modulations, timeQuantized)
+
     let octave = Math.floor(Math.log2(freq / rootFreq))
 
     // number between 1 and 2 representing an unquantized pitch in the scale
@@ -145,7 +146,7 @@ export default class PianoRoll extends Component {
 
     block.note.pitch = scalePitch
     block.note.octave = octave
-    block.note.startTime = timeQuantized
+
     block.setPosition(x, y)
   }
 

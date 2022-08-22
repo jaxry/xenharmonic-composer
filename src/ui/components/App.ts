@@ -5,21 +5,23 @@ import PianoRoll from './PianoRoll'
 import playNotes from '../../playNotes'
 import { backgroundColor } from '../theme'
 import { Note } from '../../Note'
+import { Modulation } from '../../modulation'
 
 export default class App extends Component {
   notes: Set<Note> = new Set()
+  modulations: Modulation[] = []
 
   constructor (element: HTMLElement) {
     super(element)
 
-    const pianoRoll = this.newComponent(PianoRoll, this.notes)
+    const pianoRoll = this.newComponent(PianoRoll, this.notes, this.modulations)
 
     this.element.append(pianoRoll.element)
 
     const play = document.createElement('button')
     play.innerText = 'Play'
     play.addEventListener('click', () => {
-      playNotes(this.notes)
+      playNotes(this.notes, this.modulations)
     })
     this.element.append(play)
   }

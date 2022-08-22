@@ -5,7 +5,6 @@ import colors from '../colors'
 import PianoRoll from './PianoRoll'
 import { lerp } from '../../math'
 import { removeChildren } from '../../util'
-import Fraction from '../../Fraction'
 import { modulateByInterval } from '../../modulation'
 
 export default class PianoRollGrid extends Component {
@@ -27,7 +26,7 @@ export default class PianoRollGrid extends Component {
     this.redraw()
   }
 
-  redraw() {
+  redraw () {
     removeChildren(this.lines)
 
     this.addBeats()
