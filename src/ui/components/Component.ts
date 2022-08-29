@@ -3,13 +3,14 @@ import CustomEvent from '../../CustomEvent'
 type Constructor<T> = { new (...args: any[]): T }
 
 export default class Component {
-  element: HTMLElement
+  element: HTMLElement | SVGGElement
 
   private parentComponent?: Component
   private childComponents = new Set<Component>()
   private destroyCallbacks: Array<() => void> = []
 
-  constructor (element: HTMLElement = document.createElement('div')) {
+  constructor (element: HTMLElement | SVGGElement = document.createElement(
+      'div')) {
     this.element = element
   }
 

@@ -4,76 +4,70 @@ import colors from '../colors'
 import makeDraggable from '../makeDraggable'
 import { backgroundColor } from '../theme'
 import { Note } from '../../Note'
+import createSVG from '../createSVG'
+import { numToPixel } from '../../util'
+import throttle from '../throttle'
 
 export default class PianoRollBlock extends Component {
   onDrag?: (block: this, x: number, y: number) => void
   onDragEdge?: (block: this, x: number) => void
 
-  constructor (public note: Note, pointerEvent: PointerEvent) {
-    super()
+  constructor (public note: Note, mouseEvent: MouseEvent) {
+    super(createSVG('rect'))
     this.element.classList.add(containerStyle)
-    this.addDragBehavior(pointerEvent)
+    this.element.setAttribute('rx', '6')
+    this.addDragBehavior(mouseEvent)
   }
 
   setPosition (x: number, y: number) {
-    this.element.style.transform =
-        `translate(${Math.round(x)}px,${Math.round(y)}px) translate(0, -50%)`
+    this.element.setAttribute('x', numToPixel(x))
+    this.element.setAttribute('y', numToPixel(y))
   }
 
   setWidth (width: number) {
-    this.element.style.width = `${Math.round(width)}px`
+    this.element.setAttribute('width', numToPixel(width))
   }
 
-  private addDragBehavior (pointerEvent: PointerEvent) {
+  private addDragBehavior (pointerEvent: MouseEvent) {
     let mouseDiffX: number
     let mouseDiffY: number
     let rect: DOMRect
 
+    let extending = false
+
     makeDraggable(this.element, (e) => {
-      const x = e.clientX - mouseDiffX
-      const y = e.clientY - mouseDiffY + rect.height / 2
-      this.onDrag?.(this, x, y)
+      if (extending) {
+        this.onDragEdge?.(this, e.clientX - mouseDiffX)
+      } else {
+        this.onDrag?.(this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
+      }
     }, {
       onDown: (e) => {
         rect = this.element.getBoundingClientRect()
-        mouseDiffX = e.clientX - rect.x
-        mouseDiffY = e.clientY - rect.y
+        extending = rect.right - e.clientX < extendingHandleSize
+        mouseDiffX = e.clientX - (extending ? rect.right : rect.left)
+        mouseDiffY = e.clientY - rect.top - rect.height / 2
       },
       startEnabled: pointerEvent,
     })
 
-    const edge = document.createElement('div')
-    edge.classList.add(edgeStyle)
-    this.element.append(edge)
-    makeDraggable(edge, (e) => {
-      const x = e.clientX - mouseDiffX
-      this.onDragEdge?.(this, x)
-    }, {
-      onDown: (e) => {
-        rect = edge.getBoundingClientRect()
-        mouseDiffX = e.clientX - rect.right
-        e.stopPropagation()
-      },
+    this.element.addEventListener('mousemove', throttle((e) => {
+      const rect = this.element.getBoundingClientRect()
+      const extending = rect.right - e.clientX < extendingHandleSize
+      this.element.style.cursor = extending ? 'ew-resize' : 'move'
+    }))
+    this.element.addEventListener('mouseleave', () => {
+      this.element.style.cursor = ''
     })
   }
 }
 
+const extendingHandleSize = 12
+
 const containerStyle = makeStyle({
-  position: `absolute`,
-  top: `0`,
-  left: `0`,
   height: `var(--blockHeight)`,
-  background: colors.green[300],
-  borderRadius: '0.25rem',
+  fill: colors.green[300],
   cursor: `move`,
   color: backgroundColor['700'],
-})
-
-const edgeStyle = makeStyle({
-  position: `absolute`,
-  top: `0`,
-  right: `0`,
-  bottom: `0`,
-  width: `0.5rem`,
-  cursor: `ew-resize`,
+  transform: `translate(0, -50%)`,
 })

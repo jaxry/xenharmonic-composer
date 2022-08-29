@@ -1,19 +1,19 @@
 import throttle from './throttle'
 
 export default function makeDraggable (
-    element: HTMLElement,
-    onDrag: (e: PointerEvent, movementX: number, movementY: number) => void,
+    element: Element,
+    onDrag: (e: MouseEvent, movementX: number, movementY: number) => void,
     options?: {
-      onDown?: (e: PointerEvent) => void,
-      onUp?: (e: PointerEvent) => void,
-      enableWhen?: (e: PointerEvent) => boolean,
-      startEnabled?: PointerEvent
+      onDown?: (e: MouseEvent) => void,
+      onUp?: (e: MouseEvent) => void,
+      enableWhen?: (e: MouseEvent) => boolean,
+      startEnabled?: MouseEvent
     }) {
 
   let lastX = 0
   let lastY = 0
 
-  function down (e: PointerEvent) {
+  function down (e: MouseEvent) {
     if (options?.enableWhen?.(e) === false) {
       return
     }
@@ -24,13 +24,13 @@ export default function makeDraggable (
     lastX = e.clientX
     lastY = e.clientY
 
-    document.body.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up, { once: true })
+    document.body.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up, { once: true })
   }
 
   // throttle the mousemove event to the browser's requestAnimationFrame
   // otherwise even gets triggered way more than necessary
-  const move = throttle((e: PointerEvent) => {
+  const move = throttle((e: MouseEvent) => {
     const movementX = e.clientX - lastX
     const movementY = e.clientY - lastY
     onDrag(e, movementX, movementY)
@@ -38,12 +38,12 @@ export default function makeDraggable (
     lastY = e.clientY
   })
 
-  function up (e: PointerEvent) {
-    document.body.removeEventListener('pointermove', move)
+  function up (e: MouseEvent) {
+    document.body.removeEventListener('mousemove', move)
     options?.onUp?.(e)
   }
 
-  element.addEventListener('pointerdown', down)
+  (element as HTMLElement).addEventListener('mousedown', down)
 
   if (options?.startEnabled) {
     const event = options.startEnabled
@@ -51,6 +51,6 @@ export default function makeDraggable (
   }
 
   return () => {
-    element.removeEventListener('pointerdown', down)
+    (element as HTMLElement).removeEventListener('mousedown', down)
   }
 }

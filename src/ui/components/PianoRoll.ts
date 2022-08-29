@@ -2,16 +2,19 @@ import Component from './Component'
 import PianoRollBlock from './PianoRollBlock'
 import { makeStyle } from '../makeStyle'
 import { border, borderRadius } from '../theme'
-import PianoRollGrid from './PianoRollGrid'
 import Fraction from '../../Fraction'
 import makeDraggable from '../makeDraggable'
 import { Note } from '../../Note'
-import { lerp } from '../../math'
-import { findClosest } from '../../util'
+import { findClosest, lerp, numToPixel } from '../../util'
 import { Modulation, totalModulationAtTime } from '../../modulation'
+import createSVG from '../createSVG'
+import { drawPianoRollGrid } from './PianoRoll/drawPianoRollGrid'
 
 export default class PianoRoll extends Component {
-  content = document.createElement('div')
+  svg = createSVG('svg')
+
+  grid: SVGGElement
+
   blocks = new Set<PianoRollBlock>()
 
   units = 8
@@ -23,20 +26,25 @@ export default class PianoRoll extends Component {
 
   minFrequency = 30
   maxFrequency = 5000
-  minLogFrequency = Math.log(this.minFrequency)
-  maxLogFrequency = Math.log(this.maxFrequency)
+  readonly minLogFrequency = Math.log(this.minFrequency)
+  readonly maxLogFrequency = Math.log(this.maxFrequency)
+
+  readonly totalHeight = Math.round(
+      this.octaveHeight * Math.log2(this.maxFrequency / this.minFrequency))
 
   scale = scale
-
-  grid: PianoRollGrid
 
   constructor (public notes: Set<Note>, public modulations: Modulation[]) {
     super()
 
     this.element.classList.add(containerStyle)
 
-    this.content.classList.add(contentStyle)
-    this.element.append(this.content)
+    this.svg.classList.add(svgStyle)
+    this.svg.setAttribute('width', numToPixel(this.unitWidth * this.units))
+    this.svg.setAttribute('height', numToPixel(this.totalHeight))
+    this.svg.style.setProperty('--blockHeight',
+        `${Math.round(this.octaveHeight / 18)}px`)
+    this.element.append(this.svg)
 
     this.modulations.push({
       time: 2,
@@ -46,74 +54,24 @@ export default class PianoRoll extends Component {
       interval: this.scale[1],
     })
 
-    this.grid = this.newComponent(PianoRollGrid, this)
-
-    this.content.append(this.grid.element)
+    this.grid = drawPianoRollGrid(this)
+    this.svg.append(this.grid)
 
     this.addMouseBehavior()
 
-    const totalHeight = this.octaveHeight *
-        Math.log2(this.maxFrequency / this.minFrequency)
-    this.content.style.height = `${Math.round(totalHeight)}px`
-    this.content.style.width = `${this.unitWidth * this.units}px`
-    this.content.style.setProperty('--blockHeight',
-        `${Math.round(this.octaveHeight / 18)}px`)
-
     setTimeout(() => {
-      // this.grid.setZoom(this.zoomX, this.zoomY, this.padding)
       this.element.scrollTop =
-          this.content.offsetHeight / 2 - this.element.offsetHeight / 2
+          this.svg.clientHeight / 2 - this.element.clientHeight / 2
     })
   }
 
-  private addMouseBehavior () {
-    makeDraggable(this.element,
-        (e, mx, my) => {
-          this.element.scrollLeft -= mx
-          this.element.scrollTop -= my
-        }, {
-          enableWhen: (e) => e.button === 1,
-        })
-
-    this.content.addEventListener('pointerdown', (e) => {
-      if (e.target !== e.currentTarget || e.button !== 0) {
-        return
-      }
-      this.addNote(e)
-    })
-  }
-
-  private addNote (e: PointerEvent) {
-    const note = {
-      pitch: new Fraction(),
-      startTime: 0,
-      octave: 0,
-      duration: 1 / this.beatsPerUnit,
-    }
-    this.notes.add(note)
-
-    const block = this.newComponent(PianoRollBlock, note, e)
-    this.blocks.add(block)
-    this.content.append(block.element)
-
-    block.setWidth(this.unitWidth * note.duration)
-
-    block.onDrag = this.setBlockPosition
-    block.onDragEdge = this.setBlockTime
-
-    this.setBlockPosition(block, e.clientX, e.clientY, Math.floor)
-  }
-
-  private setBlockPosition = (
-      block: PianoRollBlock, mouseX: number, mouseY: number,
-      quantizeTimeFn = Math.round) => {
-    const { left, bottom, top, height } = this.content.getBoundingClientRect()
+  mousePosition (mouseX: number, mouseY: number, quantizeTimeFn = Math.round) {
+    const { left, bottom, top, height } = this.svg.getBoundingClientRect()
 
     const time = (mouseX - left) / this.unitWidth
     const timeQuantized = quantizeTimeFn(time * this.beatsPerUnit) /
         this.beatsPerUnit
     const x = timeQuantized * this.unitWidth
-    block.note.startTime = timeQuantized
 
     const freqLog = lerp(
         bottom, top,
@@ -144,22 +102,88 @@ export default class PianoRoll extends Component {
         height, 0,
         Math.log(quantizedFreq))
 
-    block.note.pitch = scalePitch
-    block.note.octave = octave
+    return {
+      x,
+      time: timeQuantized,
+      y,
+      frequency: quantizedFreq,
+      pitch: scalePitch,
+      octave,
+    }
 
+  }
+
+  private addMouseBehavior () {
+    makeDraggable(this.element,
+        (e, mx, my) => {
+          this.element.scrollLeft -= mx
+          this.element.scrollTop -= my
+        }, {
+          enableWhen: (e) => e.button === 1,
+        })
+
+    this.svg.addEventListener('mousedown', (e) => {
+      if (e.target !== e.currentTarget || e.button !== 0) {
+        return
+      }
+      if (e.ctrlKey) {
+        this.addModulation(e)
+      } else {
+        this.addNote(e)
+      }
+    })
+  }
+
+  private addModulation (e: MouseEvent) {
+    const { x, time, y, pitch, octave } = this.mousePosition(e.clientX,
+        e.clientY)
+  }
+
+  private addNote (e: MouseEvent) {
+    const note = {
+      pitch: new Fraction(),
+      startTime: 0,
+      octave: 0,
+      duration: 1 / this.beatsPerUnit,
+    }
+    this.notes.add(note)
+
+    const block = this.newComponent(PianoRollBlock, note, e)
+    this.blocks.add(block)
+    this.svg.append(block.element)
+
+    block.setWidth(this.unitWidth * note.duration)
+
+    block.onDrag = this.setBlockPosition
+    block.onDragEdge = this.setBlockDuration
+
+    this.setBlockPosition(block, e.clientX, e.clientY, Math.floor)
+  }
+
+  private setBlockPosition = (
+      block: PianoRollBlock, mouseX: number, mouseY: number,
+      quantizeTimeFn = Math.round) => {
+
+    const { x, time, y, pitch, octave } = this.mousePosition(mouseX, mouseY,
+        quantizeTimeFn)
+
+    block.note.startTime = time
+    block.note.pitch = pitch
+    block.note.octave = octave
     block.setPosition(x, y)
   }
 
-  private setBlockTime = (block: PianoRollBlock, mouseX: number) => {
-    const { left } = this.content.getBoundingClientRect()
+  private setBlockDuration = (block: PianoRollBlock, mouseX: number) => {
+    const { left } = this.svg.getBoundingClientRect()
     const endTime = (mouseX - left) / this.unitWidth
     const endTimeQuantized = Math.round(endTime * this.beatsPerUnit) /
         this.beatsPerUnit
 
     const startTime = block.note.startTime
-
-    if (endTimeQuantized - startTime !== 0) {
+    const duration = endTimeQuantized - startTime
+    if (duration !== 0) {
       const width = (endTimeQuantized - startTime) * this.unitWidth
+      block.note.duration = duration
       block.setWidth(width)
     }
   }
@@ -175,9 +199,15 @@ const containerStyle = makeStyle({
   contain: `strict`,
 })
 
-const contentStyle = makeStyle({
-  position: `relative`,
+const svgStyle = makeStyle({
+  transformOrigin: `top left`,
   contain: `strict`,
+})
+
+// makes transform behave relative to each object (like with CSS)
+// instead of relative to the svg's viewBox
+makeStyle(`.${svgStyle} *`, {
+  transformBox: `fill-box`,
 })
 
 const scale = [
