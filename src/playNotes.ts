@@ -16,7 +16,7 @@ function playNote (note: Note, currentTime: number, modulation: number) {
   const src = audioContext.createBufferSource()
   src.buffer = squareWave
   src.loop = true
-  src.playbackRate.value = 2 ** note.octave * note.pitch.number * modulation
+  src.playbackRate.value = 2 ** note.octave * note.interval.number * modulation
 
   const gain = audioContext.createGain()
   gain.gain.value = 0

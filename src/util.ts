@@ -37,38 +37,67 @@ export function deleteElem<T> (array: T[], elem: T) {
   array.splice(array.indexOf(elem), 1)
 }
 
-export function findClosest<T> (
-    array: T[], target: number, iteratee: (elem: T) => number) {
-  return array.reduce((closest, value) => {
-    const distance = Math.abs(iteratee(value) - target)
-    if (distance < closest.distance) {
-      closest.distance = distance
-      closest.value = value
+export function sortedInsert<T> (
+    array: T[], value: T, iteratee: (element: T) => number,
+    descending = false) {
+  for (let i = 0; i < array.length; i++) {
+    const foundPlace =
+        (!descending && iteratee(value) < iteratee(array[i])) ||
+        (descending && iteratee(value) > iteratee(array[i]))
+    if (foundPlace) {
+      array.splice(i, 0, value)
+      return array
     }
-    return closest
-  }, { value: array[0], distance: Infinity }).value
+  }
+  array.push(value)
+  return array
+}
+
+// ---------------
+// iterable functions
+// ---------------
+export function find<T> (list: Iterable<T>, iteratee: (elem: T) => boolean) {
+  for (const elem of list) {
+    if (iteratee(elem)) {
+      return elem
+    }
+  }
+}
+
+export function findClosest<T> (
+    list: Iterable<T>, target: number, iteratee: (elem: T) => number): T {
+
+  let closestDistance = Infinity
+  let closestValue!: T
+
+  for (const elem of list) {
+    const distance = Math.abs(iteratee(elem) - target)
+    if (distance < closestDistance) {
+      closestDistance = distance
+      closestValue = elem
+    }
+  }
+
+  return closestValue
+}
+
+export function mapIter<T, U> (
+    iterable: Iterable<T>, mapFn: (x: T, index: number) => U) {
+  const array: U[] = []
+  let i = 0
+  for (const x of iterable) {
+    array.push(mapFn(x, i++))
+  }
+  return array
 }
 
 // ---------------
 // object functions
 // ---------------
-export function swap (obj: Record<any, any>, i: number, j: number) {
+export function swap<T> (obj: T, i: keyof T, j: keyof T) {
   const t = obj[i]
   obj[i] = obj[j]
   obj[j] = t
-}
-
-export function sortByProp<T> (array: T[], prop: keyof T, reverse = false) {
-  const order = reverse ? -1 : 1
-  array.sort((a, b) => {
-    if (a[prop] < b[prop]) {
-      return -1 * order
-    } else if (a[prop] > b[prop]) {
-      return 1 * order
-    } else {
-      return 0
-    }
-  })
 }
 
 export function isEqual<T extends Record<any, any>> (a: T, b: T): boolean {
@@ -89,17 +118,6 @@ export function copy<T> (source: T): T {
 // ---------------
 // other functions
 // ---------------
-
-export function mapIter<T, U> (
-    iterable: Iterable<T>, mapFn: (x: T, index: number) => U) {
-  const array: U[] = []
-  let i = 0
-  for (const x of iterable) {
-    array.push(mapFn(x, i++))
-  }
-  return array
-}
-
 export function getAndDelete<T, U> (map: Map<T, U>, key: T): U | undefined {
   const value = map.get(key)
   map.delete(key)

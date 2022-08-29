@@ -1,4 +1,5 @@
 import Fraction from './Fraction'
+import { sortedInsert } from './util'
 
 export interface Modulation {
   time: number,
@@ -22,4 +23,24 @@ export function totalModulationAtTime (
   }
 
   return total / 2 ** Math.floor(Math.log2(total * Math.SQRT2))
+}
+
+export function insertModulation (
+    modulations: Modulation[], interval: Fraction, time: number) {
+
+  const existingIndex = modulations.findIndex((element) => {
+    return element.time === time
+  })
+
+  let modulation: Modulation
+
+  if (existingIndex >= 0) {
+    modulation = modulations[existingIndex]
+    modulation.interval = interval
+  } else {
+    modulation = { time, interval }
+    sortedInsert(modulations, modulation, modulation => modulation.time)
+  }
+
+  return modulation
 }

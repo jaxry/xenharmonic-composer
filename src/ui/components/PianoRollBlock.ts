@@ -2,7 +2,6 @@ import Component from './Component'
 import { makeStyle } from '../makeStyle'
 import colors from '../colors'
 import makeDraggable from '../makeDraggable'
-import { backgroundColor } from '../theme'
 import { Note } from '../../Note'
 import createSVG from '../createSVG'
 import { numToPixel } from '../../util'
@@ -68,6 +67,5 @@ const containerStyle = makeStyle({
   height: `var(--blockHeight)`,
   fill: colors.green[300],
   cursor: `move`,
-  color: backgroundColor['700'],
   transform: `translate(0, -50%)`,
 })

@@ -7,6 +7,7 @@ import { modulateByInterval } from '../../../modulation'
 
 export function drawPianoRollGrid (pianoRoll: PianoRoll): SVGGElement {
   const g = createSVG('g')
+  g.classList.add(gridStyle)
 
   let rootFreq = 440
   let currentTime = 0
@@ -64,6 +65,10 @@ export function drawPianoRollGrid (pianoRoll: PianoRoll): SVGGElement {
 
   return g
 }
+
+const gridStyle = makeStyle({
+  pointerEvents: 'none',
+})
 
 const octaveStyle = makeStyle({
   stroke: colors.sky[600],
