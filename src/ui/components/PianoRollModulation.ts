@@ -3,22 +3,29 @@ import { makeStyle } from '../makeStyle'
 import colors from '../colors'
 import makeDraggable from '../makeDraggable'
 import createSVG from '../createSVG'
-import { numToPixel } from '../../util'
+import { mod, numToPixel, removeChildren } from '../../util'
 import { Modulation } from '../../modulation'
 
 export default class PianoRollModulation extends Component {
   onDrag?: (block: this, x: number, y: number) => void
 
   constructor (public modulation: Modulation, mouseEvent: MouseEvent) {
-    super(createSVG('circle'))
-    this.element.classList.add(containerStyle)
-    this.element.setAttribute('r', '6')
+    super(createSVG('g'))
+
     this.addDragBehavior(mouseEvent)
   }
 
-  setPosition (x: number, y: number) {
-    this.element.setAttribute('cx', numToPixel(x))
-    this.element.setAttribute('cy', numToPixel(y))
+  setPosition (x: number, y: number, octaveHeight: number, totalHeight: number) {
+    removeChildren(this.element)
+
+    for (y = mod(y, octaveHeight); y < totalHeight; y += octaveHeight) {
+      const circle = createSVG('circle')
+      circle.classList.add(circleStyle)
+      circle.setAttribute('r', '6')
+      circle.setAttribute('cx', numToPixel(x))
+      circle.setAttribute('cy', numToPixel(y))
+      this.element.append(circle)
+    }
   }
 
   private addDragBehavior (pointerEvent: MouseEvent) {
@@ -30,7 +37,7 @@ export default class PianoRollModulation extends Component {
       this.onDrag?.(this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
     }, {
       onDown: (e) => {
-        rect = this.element.getBoundingClientRect()
+        rect = (e.target as Element).getBoundingClientRect()
         mouseDiffX = e.clientX - rect.left - rect.width / 2
         mouseDiffY = e.clientY - rect.top - rect.height / 2
       },
@@ -39,7 +46,7 @@ export default class PianoRollModulation extends Component {
   }
 }
 
-const containerStyle = makeStyle({
+const circleStyle = makeStyle({
   fill: colors.yellow[300],
   cursor: `move`,
 })
