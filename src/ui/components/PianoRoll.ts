@@ -43,8 +43,6 @@ export default class PianoRoll extends Component {
   constructor (public notes: Set<Note>, public modulations: Modulation[]) {
     super()
 
-    console.log(Math.log2(this.maxFrequency / this.minFrequency))
-
     this.element.classList.add(containerStyle)
 
     this.svg.classList.add(svgStyle)
@@ -79,13 +77,11 @@ export default class PianoRoll extends Component {
         quantizeTimeFn = Math.round,
         openModulation = false,
       } = {}) {
-    const { left, bottom, top, height } = this.svg.getBoundingClientRect()
+    const { left, bottom, top } = this.svg.getBoundingClientRect()
 
     const time = (mouseX - left) / this.unitWidth
     const timeQuantized = Math.max(0,
         quantizeTimeFn(time * this.beatsPerUnit) / this.beatsPerUnit)
-
-    const x = timeQuantized * this.unitWidth
 
     const freqLog = lerp(
         bottom, top,
@@ -96,33 +92,23 @@ export default class PianoRoll extends Component {
     const rootFreq = 440 * totalModulationAtTime(this.modulations,
         timeQuantized - (openModulation ? 1e-10 : 0))
 
-    let octave = Math.floor(Math.log2(freq / rootFreq))
-
-    // number between 1 and 2 representing the unquantized ratio of the
-    // note relative to the root frequency
-    const ratio = freq / (rootFreq * 2 ** octave)
-
-    let interval = findClosest(scale, ratio, note => note.number)
-
-    // if unquantized pitch is closer to the root note in the octave above,
-    // quantize to that root note instead
-    if (2 * scale[0].number - ratio < Math.abs(interval.number - ratio)) {
-      interval = scale[0]
-      octave += 1
-    }
-
-    const quantizedFreq = rootFreq * interval.number * 2 ** octave
-    const y = lerp(
-        this.minLogFrequency, this.maxLogFrequency,
-        height, 0,
-        Math.log(quantizedFreq))
+    const { interval, octave } = freqToInterval(freq, rootFreq)
 
     return {
-      x,
-      y,
       time: timeQuantized,
       interval,
       octave,
+      frequency: rootFreq * interval.number * 2 ** octave
+    }
+  }
+
+  getScreenPosition (time: number, freq: number) {
+    return {
+      x: time * this.unitWidth,
+      y: lerp(
+          this.minLogFrequency, this.maxLogFrequency,
+          this.totalHeight, 0,
+          Math.log(freq))
     }
   }
 
@@ -151,7 +137,7 @@ export default class PianoRoll extends Component {
   }
 
   private addModulation (e: MouseEvent) {
-    const { x, y, time, interval } = this.mousePosition(
+    const { time, interval } = this.mousePosition(
         e.clientX, e.clientY, { openModulation: true })
 
     const modulation = insertModulation(this.modulations, interval, time)
@@ -165,9 +151,22 @@ export default class PianoRoll extends Component {
       this.modulationContainer.append(modulationElem.element)
     }
 
-    modulationElem.setPosition(x, y, this.octaveHeight, this.totalHeight)
-
+    this.updateModulationPositions()
     this.drawGrid()
+
+    // TODO: Round each note to nearest interval
+    for (const note of this.notes) {
+
+    }
+  }
+
+  private updateModulationPositions() {
+    for (const elem of this.modulationElements) {
+      const modulation = elem.modulation
+      const { x, y } = this.getScreenPosition(
+          modulation.time, 440 * totalModulationAtTime(this.modulations, modulation.time))
+      elem.setPosition(x, y, this.octaveHeight, this.totalHeight)
+    }
   }
 
   private addNote (e: MouseEvent) {
@@ -197,12 +196,14 @@ export default class PianoRoll extends Component {
       block: PianoRollBlock, mouseX: number, mouseY: number,
       quantizeTimeFn = Math.round) => {
 
-    const { x, y, time, interval, octave } = this.mousePosition(mouseX, mouseY,
+    const {time, interval, octave, frequency } = this.mousePosition(mouseX, mouseY,
         { quantizeTimeFn })
 
     block.note.startTime = time
     block.note.interval = interval
     block.note.octave = octave
+
+    const {x, y} = this.getScreenPosition(time, frequency)
     block.setPosition(x, y)
   }
 
@@ -258,3 +259,26 @@ const scale = [
   new Fraction(9, 5),
   new Fraction(15, 8),
 ]
+
+// TODO: Move elsewhere
+function freqToInterval(frequency: number, rootFrequency: number) {
+  let octave = Math.floor(Math.log2(frequency / rootFrequency))
+
+  // number between 1 and 2 representing the unquantized ratio of the
+  // note relative to the root frequency
+  const ratio = frequency / (rootFrequency * 2 ** octave)
+
+  let interval = findClosest(scale, ratio, note => note.number)
+
+  // if unquantized pitch is closer to the root note in the octave above,
+  // quantize to that root note instead
+  if (2 * scale[0].number - ratio < Math.abs(interval.number - ratio)) {
+    interval = scale[0]
+    octave += 1
+  }
+
+  return {
+    interval,
+    octave
+  }
+}
