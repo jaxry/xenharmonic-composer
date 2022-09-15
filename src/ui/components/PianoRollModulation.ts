@@ -15,7 +15,8 @@ export default class PianoRollModulation extends Component {
     this.addDragBehavior(mouseEvent)
   }
 
-  setPosition (x: number, y: number, octaveHeight: number, totalHeight: number) {
+  setPosition (
+      x: number, y: number, octaveHeight: number, totalHeight: number) {
     removeChildren(this.element)
 
     for (y = mod(y, octaveHeight); y < totalHeight; y += octaveHeight) {
@@ -29,17 +30,13 @@ export default class PianoRollModulation extends Component {
   }
 
   private addDragBehavior (pointerEvent: MouseEvent) {
-    let mouseDiffX: number
-    let mouseDiffY: number
-    let rect: DOMRect
-
-    makeDraggable(this.element, (e) => {
-      this.onDrag?.(this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
-    }, {
+    makeDraggable(this.element, {
       onDown: (e) => {
-        rect = (e.target as Element).getBoundingClientRect()
-        mouseDiffX = e.clientX - rect.left - rect.width / 2
-        mouseDiffY = e.clientY - rect.top - rect.height / 2
+        const rect = (e.target as Element).getBoundingClientRect()
+        const mouseDiffX = e.clientX - rect.left - rect.width / 2
+        const mouseDiffY = e.clientY - rect.top - rect.height / 2
+        return (e) => this.onDrag?.(
+            this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
       },
       startEnabled: pointerEvent,
     })

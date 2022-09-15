@@ -28,24 +28,16 @@ export default class PianoRollBlock extends Component {
   }
 
   private addDragBehavior (pointerEvent: MouseEvent) {
-    let mouseDiffX: number
-    let mouseDiffY: number
-    let rect: DOMRect
-
-    let extending = false
-
-    makeDraggable(this.element, (e) => {
-      if (extending) {
-        this.onDragEdge?.(this, e.clientX - mouseDiffX)
-      } else {
-        this.onDrag?.(this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
-      }
-    }, {
+    makeDraggable(this.element, {
       onDown: (e) => {
-        rect = this.element.getBoundingClientRect()
-        extending = rect.right - e.clientX < extendingHandleSize
-        mouseDiffX = e.clientX - (extending ? rect.right : rect.left)
-        mouseDiffY = e.clientY - rect.top - rect.height / 2
+        const rect = this.element.getBoundingClientRect()
+        const extending = rect.right - e.clientX < extendingHandleSize
+        const mouseDiffX = e.clientX - (extending ? rect.right : rect.left)
+        const mouseDiffY = e.clientY - rect.top - rect.height / 2
+        return extending ?
+            (e) => this.onDragEdge?.(this, e.clientX - mouseDiffX) :
+            (e) => this.onDrag?.(
+                this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
       },
       startEnabled: pointerEvent,
     })
@@ -55,9 +47,6 @@ export default class PianoRollBlock extends Component {
       const extending = rect.right - e.clientX < extendingHandleSize
       this.element.style.cursor = extending ? 'ew-resize' : 'move'
     }))
-    this.element.addEventListener('mouseleave', () => {
-      this.element.style.cursor = ''
-    })
   }
 }
 
@@ -66,6 +55,5 @@ const extendingHandleSize = 12
 const containerStyle = makeStyle({
   height: `var(--blockHeight)`,
   fill: colors.green[300],
-  cursor: `move`,
   transform: `translate(0, -50%)`,
 })

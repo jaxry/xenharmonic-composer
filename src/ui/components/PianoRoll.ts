@@ -5,18 +5,21 @@ import { border, borderRadius } from '../theme'
 import Fraction from '../../Fraction'
 import makeDraggable from '../makeDraggable'
 import { Note } from '../../Note'
-import { find, findClosest, lerp, numToPixel } from '../../util'
+import { find, lerp, numToPixel } from '../../util'
 import {
   insertModulation, Modulation, totalModulationAtTime,
 } from '../../modulation'
 import createSVG from '../createSVG'
-import { drawPianoRollGrid } from './PianoRoll/drawPianoRollGrid'
 import PianoRollModulation from './PianoRollModulation'
+import { freqToInterval, scale } from '../../scale'
+import { drawPitchLines } from './PianoRoll/drawPitchLines'
+import { drawBeatLines } from './PianoRoll/drawGridLines'
 
 export default class PianoRoll extends Component {
   svg = createSVG('svg')
 
-  grid = createSVG('g')
+  beatLines = createSVG('g')
+  pitchLines = createSVG('g')
   blockContainer = createSVG('g')
   modulationContainer = createSVG('g')
 
@@ -52,13 +55,15 @@ export default class PianoRoll extends Component {
         `${Math.round(this.octaveHeight / 18)}px`)
     this.element.append(this.svg)
 
-    this.svg.append(this.grid)
+    this.svg.append(this.pitchLines)
+    this.svg.append(this.beatLines)
     this.svg.append(this.blockContainer)
     this.svg.append(this.modulationContainer)
 
     this.addMouseBehavior()
 
-    this.drawGrid()
+    this.drawPitchLines()
+    this.drawBeatLines()
 
     setTimeout(() => {
       this.element.scrollTop =
@@ -66,10 +71,16 @@ export default class PianoRoll extends Component {
     })
   }
 
-  drawGrid () {
-    const newGrid = drawPianoRollGrid(this)
-    this.grid.replaceWith(newGrid)
-    this.grid = newGrid
+  drawPitchLines () {
+    const g = drawPitchLines(this)
+    this.pitchLines.replaceWith(g)
+    this.pitchLines = g
+  }
+
+  drawBeatLines () {
+    const g = drawBeatLines(this)
+    this.beatLines.replaceWith(g)
+    this.beatLines = g
   }
 
   mousePosition (
@@ -92,13 +103,13 @@ export default class PianoRoll extends Component {
     const rootFreq = 440 * totalModulationAtTime(this.modulations,
         timeQuantized - (openModulation ? 1e-10 : 0))
 
-    const { interval, octave } = freqToInterval(freq, rootFreq)
+    const { interval, octave } = freqToInterval(freq, rootFreq, this.scale)
 
     return {
       time: timeQuantized,
       interval,
       octave,
-      frequency: rootFreq * interval.number * 2 ** octave
+      frequency: rootFreq * interval.number * 2 ** octave,
     }
   }
 
@@ -108,18 +119,18 @@ export default class PianoRoll extends Component {
       y: lerp(
           this.minLogFrequency, this.maxLogFrequency,
           this.totalHeight, 0,
-          Math.log(freq))
+          Math.log(freq)),
     }
   }
 
   private addMouseBehavior () {
-    makeDraggable(this.element,
-        (e, mx, my) => {
-          this.element.scrollLeft -= mx
-          this.element.scrollTop -= my
-        }, {
-          enableWhen: (e) => e.button === 1,
-        })
+    makeDraggable(this.element, {
+      onDown: (e) => e.button === 1,
+      onDrag: (e, mx, my) => {
+        this.element.scrollLeft -= mx
+        this.element.scrollTop -= my
+      },
+    })
 
     this.svg.addEventListener('mousedown', (e) => {
       if (e.target !== e.currentTarget) {
@@ -152,7 +163,7 @@ export default class PianoRoll extends Component {
     }
 
     this.updateModulationPositions()
-    this.drawGrid()
+    this.drawPitchLines()
 
     // TODO: Round each note to nearest interval
     for (const note of this.notes) {
@@ -160,11 +171,12 @@ export default class PianoRoll extends Component {
     }
   }
 
-  private updateModulationPositions() {
+  private updateModulationPositions () {
     for (const elem of this.modulationElements) {
       const modulation = elem.modulation
       const { x, y } = this.getScreenPosition(
-          modulation.time, 440 * totalModulationAtTime(this.modulations, modulation.time))
+          modulation.time,
+          440 * totalModulationAtTime(this.modulations, modulation.time))
       elem.setPosition(x, y, this.octaveHeight, this.totalHeight)
     }
   }
@@ -196,14 +208,14 @@ export default class PianoRoll extends Component {
       block: PianoRollBlock, mouseX: number, mouseY: number,
       quantizeTimeFn = Math.round) => {
 
-    const {time, interval, octave, frequency } = this.mousePosition(mouseX, mouseY,
-        { quantizeTimeFn })
+    const { time, interval, octave, frequency } = this.mousePosition(
+        mouseX, mouseY, { quantizeTimeFn })
 
     block.note.startTime = time
     block.note.interval = interval
     block.note.octave = octave
 
-    const {x, y} = this.getScreenPosition(time, frequency)
+    const { x, y } = this.getScreenPosition(time, frequency)
     block.setPosition(x, y)
   }
 
@@ -243,42 +255,3 @@ const svgStyle = makeStyle({
 makeStyle(`.${svgStyle} *`, {
   transformBox: `fill-box`,
 })
-
-const scale = [
-  new Fraction(1, 1),
-  new Fraction(16, 15),
-  new Fraction(9, 8),
-  new Fraction(6, 5),
-  new Fraction(5, 4),
-  new Fraction(4, 3),
-  new Fraction(25, 18),
-  new Fraction(36, 25),
-  new Fraction(3, 2),
-  new Fraction(8, 5),
-  new Fraction(5, 3),
-  new Fraction(9, 5),
-  new Fraction(15, 8),
-]
-
-// TODO: Move elsewhere
-function freqToInterval(frequency: number, rootFrequency: number) {
-  let octave = Math.floor(Math.log2(frequency / rootFrequency))
-
-  // number between 1 and 2 representing the unquantized ratio of the
-  // note relative to the root frequency
-  const ratio = frequency / (rootFrequency * 2 ** octave)
-
-  let interval = findClosest(scale, ratio, note => note.number)
-
-  // if unquantized pitch is closer to the root note in the octave above,
-  // quantize to that root note instead
-  if (2 * scale[0].number - ratio < Math.abs(interval.number - ratio)) {
-    interval = scale[0]
-    octave += 1
-  }
-
-  return {
-    interval,
-    octave
-  }
-}

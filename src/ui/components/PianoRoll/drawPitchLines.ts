@@ -5,9 +5,8 @@ import PianoRoll from '../PianoRoll'
 import { lerp, numToPixel } from '../../../util'
 import { modulateByInterval } from '../../../modulation'
 
-export function drawPianoRollGrid (pianoRoll: PianoRoll): SVGGElement {
+export function drawPitchLines (pianoRoll: PianoRoll): SVGGElement {
   const g = createSVG('g')
-  g.classList.add(gridStyle)
 
   let rootFreq = 440
   let currentTime = 0
@@ -19,8 +18,6 @@ export function drawPianoRollGrid (pianoRoll: PianoRoll): SVGGElement {
   }
 
   addPitches(rootFreq, currentTime)
-
-  addBeats()
 
   function addPitches (rootFreq: number, fromTime: number, toTime?: number) {
     const startFreq = rootFreq *
@@ -47,28 +44,8 @@ export function drawPianoRollGrid (pianoRoll: PianoRoll): SVGGElement {
     }
   }
 
-  function addBeats () {
-    const lines = pianoRoll.units * pianoRoll.beatsPerUnit
-    for (let i = 0; i < lines; i++) {
-      const x = numToPixel(
-          i * pianoRoll.unitWidth / pianoRoll.beatsPerUnit)
-      const line = createSVG('line')
-      line.setAttribute('x1', x)
-      line.setAttribute('x2', x)
-      line.setAttribute('y1', `0`)
-      line.setAttribute('y2', `100%`)
-      line.classList.add(
-          i % pianoRoll.beatsPerUnit === 0 ? unitStyle : beatStyle)
-      g.append(line)
-    }
-  }
-
   return g
 }
-
-const gridStyle = makeStyle({
-  pointerEvents: 'none',
-})
 
 const octaveStyle = makeStyle({
   stroke: colors.sky[600],
@@ -77,16 +54,5 @@ const octaveStyle = makeStyle({
 
 const pitchStyle = makeStyle({
   stroke: colors.slate[700],
-  strokeWidth: `1`,
-})
-
-const unitStyle = makeStyle({
-  stroke: colors.lime[900],
-  strokeWidth: `2`,
-})
-
-const beatStyle = makeStyle({
-  stroke: colors.gray[600],
-  strokeDasharray: `2,10`,
   strokeWidth: `1`,
 })

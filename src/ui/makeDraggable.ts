@@ -1,23 +1,36 @@
 import throttle from './throttle'
 
+interface OnDrag {
+  (e: MouseEvent, movementX: number, movementY: number): void
+}
+
 export default function makeDraggable (
     element: Element,
-    onDrag: (e: MouseEvent, movementX: number, movementY: number) => void,
-    options?: {
-      onDown?: (e: MouseEvent) => void,
+    options: {
+      onDrag?: OnDrag,
+
+      // if returns false, drag is canceled
+      // if returns callback, this callback will be used instead of options.onDrag
+      // otherwise, options.onDrag will be the drag callback
+      onDown?: (e: MouseEvent) => boolean | OnDrag | void,
+
       onUp?: (e: MouseEvent) => void,
-      enableWhen?: (e: MouseEvent) => boolean,
       startEnabled?: MouseEvent
     }) {
 
   let lastX = 0
   let lastY = 0
+  let onDrag: OnDrag
 
   function down (e: MouseEvent) {
-    if (options?.enableWhen?.(e) === false) {
+    const returned = options.onDown?.(e)
+    if (returned === false) {
       return
+    } else if (returned instanceof Function) {
+      onDrag = returned
+    } else {
+      onDrag = options.onDrag!
     }
-    options?.onDown?.(e)
 
     e.preventDefault()
 
@@ -40,12 +53,12 @@ export default function makeDraggable (
 
   function up (e: MouseEvent) {
     document.body.removeEventListener('mousemove', move)
-    options?.onUp?.(e)
+    options.onUp?.(e)
   }
 
   (element as HTMLElement).addEventListener('mousedown', down)
 
-  if (options?.startEnabled) {
+  if (options.startEnabled) {
     const event = options.startEnabled
     setTimeout(() => down(event))
   }
