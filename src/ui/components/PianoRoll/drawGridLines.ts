@@ -9,8 +9,7 @@ export function drawBeatLines (pianoRoll: PianoRoll): SVGGElement {
 
   const lines = pianoRoll.units * pianoRoll.beatsPerUnit
   for (let i = 0; i < lines; i++) {
-    const x = numToPixel(
-        i * pianoRoll.unitWidth / pianoRoll.beatsPerUnit)
+    const x = numToPixel(pianoRoll.timeToScreen(i / pianoRoll.beatsPerUnit))
     const line = createSVG('line')
     line.setAttribute('x1', x)
     line.setAttribute('x2', x)

@@ -113,14 +113,15 @@ export default class PianoRoll extends Component {
     }
   }
 
-  getScreenPosition (time: number, freq: number) {
-    return {
-      x: time * this.unitWidth,
-      y: lerp(
-          this.minLogFrequency, this.maxLogFrequency,
-          this.totalHeight, 0,
-          Math.log(freq)),
-    }
+  timeToScreen (time: number) {
+    return time * this.unitWidth
+  }
+
+  frequencyToScreen (freq: number) {
+    return lerp(
+        this.minLogFrequency, this.maxLogFrequency,
+        this.totalHeight, 0,
+        Math.log(freq))
   }
 
   private addMouseBehavior () {
@@ -174,8 +175,8 @@ export default class PianoRoll extends Component {
   private updateModulationPositions () {
     for (const elem of this.modulationElements) {
       const modulation = elem.modulation
-      const { x, y } = this.getScreenPosition(
-          modulation.time,
+      const x = this.timeToScreen(modulation.time)
+      const y = this.frequencyToScreen(
           440 * totalModulationAtTime(this.modulations, modulation.time))
       elem.setPosition(x, y, this.octaveHeight, this.totalHeight)
     }
@@ -215,7 +216,8 @@ export default class PianoRoll extends Component {
     block.note.interval = interval
     block.note.octave = octave
 
-    const { x, y } = this.getScreenPosition(time, frequency)
+    const x = this.timeToScreen(time)
+    const y = this.frequencyToScreen(frequency)
     block.setPosition(x, y)
   }
 

@@ -2,7 +2,7 @@ import { makeStyle } from '../../makeStyle'
 import colors from '../../colors'
 import createSVG from '../../createSVG'
 import PianoRoll from '../PianoRoll'
-import { lerp, numToPixel } from '../../../util'
+import { numToPixel } from '../../../util'
 import { modulateByInterval } from '../../../modulation'
 
 export function drawPitchLines (pianoRoll: PianoRoll): SVGGElement {
@@ -27,11 +27,11 @@ export function drawPitchLines (pianoRoll: PianoRoll): SVGGElement {
       for (const pitch of pianoRoll.scale) {
         const freq = f * pitch.number
 
-        const x1 = numToPixel(fromTime * pianoRoll.unitWidth)
-        const x2 = toTime ? numToPixel(toTime * pianoRoll.unitWidth) : `100%`
-        const y = numToPixel(lerp(
-            pianoRoll.minLogFrequency, pianoRoll.maxLogFrequency,
-            pianoRoll.totalHeight, 0, Math.log(freq)))
+        const x1 = numToPixel(pianoRoll.timeToScreen(fromTime))
+        const x2 = toTime ?
+            numToPixel(pianoRoll.timeToScreen(toTime)) :
+            `100%`
+        const y = numToPixel(pianoRoll.frequencyToScreen(freq))
 
         const line = createSVG('line')
         line.setAttribute('x1', x1)
