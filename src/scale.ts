@@ -17,7 +17,7 @@ export const scale = [
   new Fraction(15, 8),
 ]
 
-export function freqToInterval (
+export function frequencyToPitch (
     frequency: number, rootFrequency: number, scale: Fraction[]) {
   let octave = Math.floor(Math.log2(frequency / rootFrequency))
 

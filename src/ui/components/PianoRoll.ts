@@ -11,9 +11,10 @@ import {
 } from '../../modulation'
 import createSVG from '../createSVG'
 import PianoRollModulation from './PianoRollModulation'
-import { freqToInterval, scale } from '../../scale'
+import { frequencyToPitch, scale } from '../../scale'
 import { drawPitchLines } from './PianoRoll/drawPitchLines'
 import { drawBeatLines } from './PianoRoll/drawGridLines'
+import { previewNote } from '../../playNotes'
 
 export default class PianoRoll extends Component {
   svg = createSVG('svg')
@@ -83,7 +84,7 @@ export default class PianoRoll extends Component {
     this.beatLines = g
   }
 
-  mousePosition (
+  mouseToNote (
       mouseX: number, mouseY: number, {
         quantizeTimeFn = Math.round,
         openModulation = false,
@@ -103,7 +104,7 @@ export default class PianoRoll extends Component {
     const rootFreq = 440 * totalModulationAtTime(this.modulations,
         timeQuantized - (openModulation ? 1e-10 : 0))
 
-    const { interval, octave } = freqToInterval(freq, rootFreq, this.scale)
+    const { interval, octave } = frequencyToPitch(freq, rootFreq, this.scale)
 
     return {
       time: timeQuantized,
@@ -149,7 +150,7 @@ export default class PianoRoll extends Component {
   }
 
   private addModulation (e: MouseEvent) {
-    const { time, interval } = this.mousePosition(
+    const { time, interval } = this.mouseToNote(
         e.clientX, e.clientY, { openModulation: true })
 
     const modulation = insertModulation(this.modulations, interval, time)
@@ -209,12 +210,20 @@ export default class PianoRoll extends Component {
       block: PianoRollBlock, mouseX: number, mouseY: number,
       quantizeTimeFn = Math.round) => {
 
-    const { time, interval, octave, frequency } = this.mousePosition(
+    const { time, interval, octave, frequency } = this.mouseToNote(
         mouseX, mouseY, { quantizeTimeFn })
+
+    const isNoteChanged =
+        interval !== block.note.interval ||
+        octave !== block.note.octave
 
     block.note.startTime = time
     block.note.interval = interval
     block.note.octave = octave
+
+    if (isNoteChanged) {
+      previewNote(block.note, this.modulations)
+    }
 
     const x = this.timeToScreen(time)
     const y = this.frequencyToScreen(frequency)

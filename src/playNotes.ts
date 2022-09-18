@@ -12,6 +12,12 @@ export default function playNotes (
   }
 }
 
+export function previewNote (note: Note, modulations: Modulation[]) {
+  playNote(note,
+      audioContext.currentTime - note.startTime,
+      totalModulationAtTime(modulations, note.startTime))
+}
+
 function playNote (note: Note, currentTime: number, modulation: number) {
   const src = audioContext.createBufferSource()
   src.buffer = squareWave

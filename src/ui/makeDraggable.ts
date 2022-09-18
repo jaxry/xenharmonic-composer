@@ -9,7 +9,7 @@ export default function makeDraggable (
     options: {
       onDrag?: OnDrag,
 
-      // if returns false, drag is canceled
+      // if returns false, drag is aborted
       // if returns callback, this callback will be used instead of options.onDrag
       // otherwise, options.onDrag will be the drag callback
       onDown?: (e: MouseEvent) => boolean | OnDrag | void,
@@ -24,12 +24,12 @@ export default function makeDraggable (
 
   function down (e: MouseEvent) {
     const returned = options.onDown?.(e)
-    if (returned === false) {
-      return
-    } else if (returned instanceof Function) {
+    if (returned instanceof Function) {
       onDrag = returned
+    } else if (returned !== false && options.onDrag) {
+      onDrag = options.onDrag
     } else {
-      onDrag = options.onDrag!
+      return
     }
 
     e.preventDefault()
