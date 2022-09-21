@@ -28,8 +28,13 @@ export default class PianoRollBlock extends Component {
   }
 
   private addDragBehavior (pointerEvent: MouseEvent) {
+    // TODO: extend hitbox should be its own rect so its easier to
+    // deactivate extending on first drag
     makeDraggable(this.element, {
       onDown: (e) => {
+        if (e.button !== 0) {
+          return
+        }
         const rect = this.element.getBoundingClientRect()
         const extending = rect.right - e.clientX < extendingHandleSize
         const mouseDiffX = e.clientX - (extending ? rect.right : rect.left)

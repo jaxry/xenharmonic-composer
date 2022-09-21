@@ -19,6 +19,8 @@ export default class PianoRollModulation extends Component {
       x: number, y: number, octaveHeight: number, totalHeight: number) {
     removeChildren(this.element)
 
+    const char = Math.random() > 0.5 ? `˄` : `˅`
+
     for (y = mod(y, octaveHeight); y < totalHeight; y += octaveHeight) {
       const circle = createSVG('circle')
       circle.classList.add(circleStyle)
@@ -26,6 +28,13 @@ export default class PianoRollModulation extends Component {
       circle.setAttribute('cx', numToPixel(x))
       circle.setAttribute('cy', numToPixel(y))
       this.element.append(circle)
+
+      const text = createSVG('text')
+      text.classList.add(textStyle)
+      text.setAttribute('x', numToPixel(x))
+      text.setAttribute('y', numToPixel(y + 3))
+      text.textContent = char
+      this.element.append(text)
     }
   }
 
@@ -42,6 +51,14 @@ export default class PianoRollModulation extends Component {
     })
   }
 }
+
+const textStyle = makeStyle({
+  fontWeight: 'bold',
+  fontSize: '1rem',
+  fill: colors.green[600],
+  textAnchor: 'middle',
+  dominantBaseline: 'central',
+})
 
 const circleStyle = makeStyle({
   fill: colors.yellow[300],

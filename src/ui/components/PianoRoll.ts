@@ -15,16 +15,23 @@ import { frequencyToPitch, scale } from '../../scale'
 import { drawPitchLines } from './PianoRoll/drawPitchLines'
 import { drawBeatLines } from './PianoRoll/drawGridLines'
 import { previewNote } from '../../playNotes'
+import { deleteBlockBehavior } from './PianoRoll/deleteBlockBehavior'
 
+/* TODO: New controls
+  Have a bar at the bottom that clicking creates a modulation that you can drag around
+  Modulations don't round. Creating a modulation starts at root, and user can move it up or down without limit
+*/
 export default class PianoRoll extends Component {
   svg = createSVG('svg')
 
+  lines = createSVG('g')
   beatLines = createSVG('g')
   pitchLines = createSVG('g')
   blockContainer = createSVG('g')
   modulationContainer = createSVG('g')
 
-  blocks = new Set<PianoRollBlock>()
+  blockElementToBlock = new WeakMap<Element, PianoRollBlock>()
+
   modulationElements = new Set<PianoRollModulation>()
 
   units = 8
@@ -56,12 +63,16 @@ export default class PianoRoll extends Component {
         `${Math.round(this.octaveHeight / 18)}px`)
     this.element.append(this.svg)
 
-    this.svg.append(this.pitchLines)
-    this.svg.append(this.beatLines)
+    this.lines.classList.add(linesStyle)
+    this.lines.append(this.pitchLines)
+    this.lines.append(this.beatLines)
+    this.svg.append(this.lines)
+
     this.svg.append(this.blockContainer)
     this.svg.append(this.modulationContainer)
 
     this.addMouseBehavior()
+    deleteBlockBehavior(this)
 
     this.drawPitchLines()
     this.drawBeatLines()
@@ -104,7 +115,7 @@ export default class PianoRoll extends Component {
     const rootFreq = 440 * totalModulationAtTime(this.modulations,
         timeQuantized - (openModulation ? 1e-10 : 0))
 
-    const { interval, octave } = frequencyToPitch(freq, rootFreq, this.scale)
+    const { interval, octave } = frequencyToPitch(this.scale, rootFreq, freq)
 
     return {
       time: timeQuantized,
@@ -125,6 +136,11 @@ export default class PianoRoll extends Component {
         Math.log(freq))
   }
 
+  deleteBlock (block: PianoRollBlock) {
+    this.notes.delete(block.note)
+    block.element.remove()
+  }
+
   private addMouseBehavior () {
     makeDraggable(this.element, {
       onDown: (e) => e.button === 1,
@@ -141,9 +157,11 @@ export default class PianoRoll extends Component {
       if (e.button === 0) {
         this.addNote(e)
       } else if (e.button === 2) {
-        this.addModulation(e)
+        // this.addModulation(e)
       }
     })
+
+    // prevent browser's default right click menu
     this.svg.addEventListener('contextmenu', (e) => {
       e.preventDefault()
     })
@@ -167,10 +185,22 @@ export default class PianoRoll extends Component {
     this.updateModulationPositions()
     this.drawPitchLines()
 
-    // TODO: Round each note to nearest interval
-    for (const note of this.notes) {
-
-    }
+    // for (const block of this.blocks) {
+    //   const note = block.note
+    //   if (note.startTime < time) {
+    //     continue
+    //   }
+    //   const modulation = totalModulationAtTime(this.modulations, note.startTime)
+    //   const freq = 440 * modulation * note.interval.number * 2 ** note.octave
+    //   console.log(freq)
+    //   const pitch = frequencyToPitch(freq, 440, this.scale)
+    //   note.interval = pitch.interval
+    //   note.octave = pitch.octave
+    //
+    //   const x = this.timeToScreen(note.startTime)
+    //   const y = this.frequencyToScreen(440 * modulation * note.interval.number * 2 ** note.octave)
+    //   block.setPosition(x, y)
+    // }
   }
 
   private updateModulationPositions () {
@@ -183,6 +213,7 @@ export default class PianoRoll extends Component {
     }
   }
 
+  // TODO: move to PianoRoll folder
   private addNote (e: MouseEvent) {
     const note = {
       interval: new Fraction(),
@@ -193,7 +224,6 @@ export default class PianoRoll extends Component {
     this.notes.add(note)
 
     const block = this.newComponent(PianoRollBlock, note, e)
-    this.blocks.add(block)
     this.blockContainer.append(block.element)
 
     // TODO: Set default block duration to previously set duration
@@ -204,6 +234,8 @@ export default class PianoRoll extends Component {
 
     // TODO: Don't allow for block overlap. If an existing block exists, replace it
     this.setBlockPosition(block, e.clientX, e.clientY, Math.floor)
+
+    this.blockElementToBlock.set(block.element, block)
   }
 
   private setBlockPosition = (
@@ -238,7 +270,7 @@ export default class PianoRoll extends Component {
 
     const startTime = block.note.startTime
     const duration = endTimeQuantized - startTime
-    if (duration !== 0) {
+    if (duration > 0) {
       const width = (endTimeQuantized - startTime) * this.unitWidth
       block.note.duration = duration
       block.setWidth(width)
@@ -259,6 +291,10 @@ const containerStyle = makeStyle({
 const svgStyle = makeStyle({
   transformOrigin: `top left`,
   contain: `strict`,
+})
+
+const linesStyle = makeStyle({
+  pointerEvents: `none`,
 })
 
 // makes transform behave relative to each object (like with CSS)

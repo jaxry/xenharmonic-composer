@@ -14,46 +14,65 @@ export default function makeDraggable (
       // otherwise, options.onDrag will be the drag callback
       onDown?: (e: MouseEvent) => boolean | OnDrag | void,
 
+      onOver?: (e: MouseEvent) => void,
       onUp?: (e: MouseEvent) => void,
+
       startEnabled?: MouseEvent
     }) {
 
   let lastX = 0
   let lastY = 0
-  let onDrag: OnDrag
+  let onDrag: OnDrag | undefined
 
   function down (e: MouseEvent) {
     const returned = options.onDown?.(e)
-    if (returned instanceof Function) {
+    if (returned === false) {
+      return
+    } else if (returned instanceof Function) {
       onDrag = returned
-    } else if (returned !== false && options.onDrag) {
+    } else if (options.onDrag) {
       onDrag = options.onDrag
-    } else {
+    } else if (!options.onOver) {
       return
     }
 
     e.preventDefault()
 
-    lastX = e.clientX
-    lastY = e.clientY
+    if (onDrag) {
+      lastX = e.clientX
+      lastY = e.clientY
+      document.body.addEventListener('mousemove', move)
+    }
+    if (options.onOver) {
+      document.body.addEventListener('mouseover', options.onOver)
+    }
 
-    document.body.addEventListener('mousemove', move)
     window.addEventListener('mouseup', up, { once: true })
   }
 
   // throttle the mousemove event to the browser's requestAnimationFrame
   // otherwise even gets triggered way more than necessary
   const move = throttle((e: MouseEvent) => {
+    if (!onDrag) {
+      return
+    }
     const movementX = e.clientX - lastX
     const movementY = e.clientY - lastY
-    onDrag(e, movementX, movementY)
+    onDrag!(e, movementX, movementY)
     lastX = e.clientX
     lastY = e.clientY
   })
 
   function up (e: MouseEvent) {
     document.body.removeEventListener('mousemove', move)
+
+    if (options.onOver) {
+      document.body.removeEventListener('mouseover', options.onOver)
+    }
+
     options.onUp?.(e)
+
+    onDrag = undefined
   }
 
   (element as HTMLElement).addEventListener('mousedown', down)

@@ -8,8 +8,7 @@ export const scale = [
   new Fraction(6, 5),
   new Fraction(5, 4),
   new Fraction(4, 3),
-  new Fraction(25, 18),
-  new Fraction(36, 25),
+  new Fraction(45, 32),
   new Fraction(3, 2),
   new Fraction(8, 5),
   new Fraction(5, 3),
@@ -18,7 +17,7 @@ export const scale = [
 ]
 
 export function frequencyToPitch (
-    frequency: number, rootFrequency: number, scale: Fraction[]) {
+    scale: Fraction[], rootFrequency: number, frequency: number) {
   let octave = Math.floor(Math.log2(frequency / rootFrequency))
 
   // number between 1 and 2 representing the unquantized ratio of the
