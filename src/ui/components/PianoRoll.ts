@@ -22,7 +22,8 @@ import { deleteBlockBehavior } from './PianoRoll/deleteBlockBehavior'
   Modulations don't round. Creating a modulation starts at root, and user can move it up or down without limit
 */
 export default class PianoRoll extends Component {
-  svg = createSVG('svg')
+  gridContainer = document.createElement('div')
+  grid = createSVG('svg')
 
   lines = createSVG('g')
   beatLines = createSVG('g')
@@ -30,11 +31,12 @@ export default class PianoRoll extends Component {
   blockContainer = createSVG('g')
   modulationContainer = createSVG('g')
 
-  blockElementToBlock = new WeakMap<Element, PianoRollBlock>()
+  modulationBar = document.createElement('div')
 
+  blockElementToBlock = new WeakMap<Element, PianoRollBlock>()
   modulationElements = new Set<PianoRollModulation>()
 
-  units = 8
+  units = 16
   beatsPerUnit = 4
 
   // change these for user zoom controls
@@ -46,7 +48,8 @@ export default class PianoRoll extends Component {
   readonly minLogFrequency = Math.log(this.minFrequency)
   readonly maxLogFrequency = Math.log(this.maxFrequency)
 
-  readonly totalHeight = Math.round(
+  readonly width = this.unitWidth * this.units
+  readonly height = Math.round(
       this.octaveHeight * Math.log2(this.maxFrequency / this.minFrequency))
 
   scale = scale
@@ -56,20 +59,26 @@ export default class PianoRoll extends Component {
 
     this.element.classList.add(containerStyle)
 
-    this.svg.classList.add(svgStyle)
-    this.svg.setAttribute('width', numToPixel(this.unitWidth * this.units))
-    this.svg.setAttribute('height', numToPixel(this.totalHeight))
-    this.svg.style.setProperty('--blockHeight',
+    this.gridContainer.classList.add(gridContainerStyle)
+    this.element.append(this.gridContainer)
+
+    this.grid.classList.add(svgStyle)
+    this.grid.setAttribute('width', numToPixel(this.width))
+    this.grid.setAttribute('height', numToPixel(this.height))
+    this.grid.style.setProperty('--blockHeight',
         `${Math.round(this.octaveHeight / 18)}px`)
-    this.element.append(this.svg)
+    this.gridContainer.append(this.grid)
 
     this.lines.classList.add(linesStyle)
     this.lines.append(this.pitchLines)
     this.lines.append(this.beatLines)
-    this.svg.append(this.lines)
+    this.grid.append(this.lines)
 
-    this.svg.append(this.blockContainer)
-    this.svg.append(this.modulationContainer)
+    this.grid.append(this.blockContainer)
+    this.grid.append(this.modulationContainer)
+
+    this.modulationBar.classList.add(modulationBarStyle)
+    this.element.append(this.modulationBar)
 
     this.addMouseBehavior()
     deleteBlockBehavior(this)
@@ -78,8 +87,8 @@ export default class PianoRoll extends Component {
     this.drawBeatLines()
 
     setTimeout(() => {
-      this.element.scrollTop =
-          this.svg.clientHeight / 2 - this.element.clientHeight / 2
+      this.gridContainer.scrollTop =
+          this.grid.clientHeight / 2 - this.gridContainer.clientHeight / 2
     })
   }
 
@@ -100,7 +109,7 @@ export default class PianoRoll extends Component {
         quantizeTimeFn = Math.round,
         openModulation = false,
       } = {}) {
-    const { left, bottom, top } = this.svg.getBoundingClientRect()
+    const { left, bottom, top } = this.grid.getBoundingClientRect()
 
     const time = (mouseX - left) / this.unitWidth
     const timeQuantized = Math.max(0,
@@ -132,7 +141,7 @@ export default class PianoRoll extends Component {
   frequencyToScreen (freq: number) {
     return lerp(
         this.minLogFrequency, this.maxLogFrequency,
-        this.totalHeight, 0,
+        this.height, 0,
         Math.log(freq))
   }
 
@@ -142,15 +151,29 @@ export default class PianoRoll extends Component {
   }
 
   private addMouseBehavior () {
-    makeDraggable(this.element, {
-      onDown: (e) => e.button === 1,
-      onDrag: (e, mx, my) => {
-        this.element.scrollLeft -= mx
-        this.element.scrollTop -= my
+    makeDraggable(this.gridContainer, {
+      onDown: (e) => {
+        if (e.button !== 1) {
+          return
+
+        }
+        this.gridContainer.style.cursor = 'all-scroll'
+
+        const startX = e.clientX
+        const startY = e.clientY
+        const startScrollX = this.gridContainer.scrollLeft
+        const startScrollY = this.gridContainer.scrollTop
+        return (e) => {
+          this.gridContainer.scrollLeft = startScrollX + startX - e.clientX
+          this.gridContainer.scrollTop = startScrollY + startY - e.clientY
+        }
       },
+      onUp: (e) => {
+        this.gridContainer.style.cursor = ''
+      }
     })
 
-    this.svg.addEventListener('mousedown', (e) => {
+    this.grid.addEventListener('mousedown', (e) => {
       if (e.target !== e.currentTarget) {
         return
       }
@@ -162,7 +185,7 @@ export default class PianoRoll extends Component {
     })
 
     // prevent browser's default right click menu
-    this.svg.addEventListener('contextmenu', (e) => {
+    this.grid.addEventListener('contextmenu', (e) => {
       e.preventDefault()
     })
   }
@@ -209,7 +232,7 @@ export default class PianoRoll extends Component {
       const x = this.timeToScreen(modulation.time)
       const y = this.frequencyToScreen(
           440 * totalModulationAtTime(this.modulations, modulation.time))
-      elem.setPosition(x, y, this.octaveHeight, this.totalHeight)
+      elem.setPosition(x, y, this.octaveHeight, this.height)
     }
   }
 
@@ -263,7 +286,7 @@ export default class PianoRoll extends Component {
   }
 
   private setBlockDuration = (block: PianoRollBlock, mouseX: number) => {
-    const { left } = this.svg.getBoundingClientRect()
+    const { left } = this.grid.getBoundingClientRect()
     const endTime = (mouseX - left) / this.unitWidth
     const endTimeQuantized = Math.round(endTime * this.beatsPerUnit) /
         this.beatsPerUnit
@@ -279,13 +302,27 @@ export default class PianoRoll extends Component {
 }
 
 const containerStyle = makeStyle({
+  position: `relative`,
   margin: `1rem`,
-  height: `40rem`,
+  height: `50rem`,
   border,
   borderRadius,
   userSelect: `none`,
+})
+
+const gridContainerStyle = makeStyle({
   overflow: `auto`,
-  contain: `strict`,
+  height: `100%`,
+})
+
+const modulationBarStyle = makeStyle({
+  position: `absolute`,
+  left: `0`,
+  right: `1rem`,
+  top: `0`,
+  height: `1rem`,
+  opacity: `0.5`,
+  background: `linear-gradient(to right, yellow, blue)`,
 })
 
 const svgStyle = makeStyle({

@@ -56,9 +56,10 @@ export default function makeDraggable (
     if (!onDrag) {
       return
     }
+    // Bugged on Chrome and doesn't provide accurate numbers
     const movementX = e.clientX - lastX
     const movementY = e.clientY - lastY
-    onDrag!(e, movementX, movementY)
+    onDrag(e, movementX, movementY)
     lastX = e.clientX
     lastY = e.clientY
   })

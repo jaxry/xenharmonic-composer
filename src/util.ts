@@ -133,3 +133,7 @@ export function removeChildren (node: Node) {
 export function numToPixel (num: number) {
   return Math.round(num).toString()
 }
+
+export function numToPx (num: number) {
+  return numToPixel(num) + 'px'
+}

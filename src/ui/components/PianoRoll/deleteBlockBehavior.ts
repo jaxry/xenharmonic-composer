@@ -2,19 +2,19 @@ import PianoRoll from '../PianoRoll'
 import makeDraggable from '../../makeDraggable'
 
 export function deleteBlockBehavior (pianoRoll: PianoRoll) {
-  makeDraggable(pianoRoll.svg, {
+  makeDraggable(pianoRoll.grid, {
     onDown: (e) => {
       if (e.button !== 2) {
         return false
       }
 
-      pianoRoll.svg.style.cursor = 'not-allowed'
+      pianoRoll.grid.style.cursor = 'not-allowed'
 
       deleteBlock(e)
     },
     onOver: deleteBlock,
     onUp: () => {
-      pianoRoll.svg.style.cursor = ''
+      pianoRoll.grid.style.cursor = ''
     },
   })
 
