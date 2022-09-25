@@ -1,5 +1,5 @@
 import Fraction from './Fraction'
-import { sortedInsert } from './util'
+import { deleteElem, sortedInsert } from './util'
 
 export interface Modulation {
   time: number,
@@ -43,4 +43,9 @@ export function insertModulation (
   }
 
   return modulation
+}
+
+export function removeModulation (
+    modulations: Modulation[], modulation: Modulation) {
+  deleteElem(modulations, modulation)
 }

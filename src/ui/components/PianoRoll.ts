@@ -3,19 +3,18 @@ import PianoRollBlock from './PianoRollBlock'
 import { makeStyle } from '../makeStyle'
 import { border, borderRadius } from '../theme'
 import Fraction from '../../Fraction'
-import makeDraggable from '../makeDraggable'
 import { Note } from '../../Note'
-import { find, lerp, numToPixel } from '../../util'
-import {
-  insertModulation, Modulation, totalModulationAtTime,
-} from '../../modulation'
+import { lerp, numToPixel } from '../../util'
+import { Modulation, totalModulationAtTime } from '../../modulation'
 import createSVG from '../createSVG'
 import PianoRollModulation from './PianoRollModulation'
 import { frequencyToPitch, scale } from '../../scale'
 import { drawPitchLines } from './PianoRoll/drawPitchLines'
-import { drawBeatLines } from './PianoRoll/drawGridLines'
+import { drawBeatLines } from './PianoRoll/drawBeatLines'
 import { previewNote } from '../../playNotes'
 import { deleteBlockBehavior } from './PianoRoll/deleteBlockBehavior'
+import PianoRollModulationBar from './PianoRollModulationBar'
+import { panBehavior } from './PianoRoll/panBehavior'
 
 /* TODO: New controls
   Have a bar at the bottom that clicking creates a modulation that you can drag around
@@ -31,10 +30,10 @@ export default class PianoRoll extends Component {
   blockContainer = createSVG('g')
   modulationContainer = createSVG('g')
 
-  modulationBar = document.createElement('div')
+  modulationBar: PianoRollModulationBar
 
   blockElementToBlock = new WeakMap<Element, PianoRollBlock>()
-  modulationElements = new Set<PianoRollModulation>()
+  modulationElements = new Map<Modulation, PianoRollModulation>()
 
   units = 16
   beatsPerUnit = 4
@@ -77,31 +76,20 @@ export default class PianoRoll extends Component {
     this.grid.append(this.blockContainer)
     this.grid.append(this.modulationContainer)
 
-    this.modulationBar.classList.add(modulationBarStyle)
-    this.element.append(this.modulationBar)
+    this.modulationBar = this.newComponent(PianoRollModulationBar, this)
+    this.element.append(this.modulationBar.element)
 
     this.addMouseBehavior()
+    panBehavior(this)
     deleteBlockBehavior(this)
 
-    this.drawPitchLines()
-    this.drawBeatLines()
+    drawPitchLines(this)
+    drawBeatLines(this)
 
     setTimeout(() => {
       this.gridContainer.scrollTop =
           this.grid.clientHeight / 2 - this.gridContainer.clientHeight / 2
     })
-  }
-
-  drawPitchLines () {
-    const g = drawPitchLines(this)
-    this.pitchLines.replaceWith(g)
-    this.pitchLines = g
-  }
-
-  drawBeatLines () {
-    const g = drawBeatLines(this)
-    this.beatLines.replaceWith(g)
-    this.beatLines = g
   }
 
   mouseToNote (
@@ -110,8 +98,8 @@ export default class PianoRoll extends Component {
         openModulation = false,
       } = {}) {
     const { left, bottom, top } = this.grid.getBoundingClientRect()
-
     const time = (mouseX - left) / this.unitWidth
+
     const timeQuantized = Math.max(0,
         quantizeTimeFn(time * this.beatsPerUnit) / this.beatsPerUnit)
 
@@ -151,36 +139,12 @@ export default class PianoRoll extends Component {
   }
 
   private addMouseBehavior () {
-    makeDraggable(this.gridContainer, {
-      onDown: (e) => {
-        if (e.button !== 1) {
-          return
-
-        }
-        this.gridContainer.style.cursor = 'all-scroll'
-
-        const startX = e.clientX
-        const startY = e.clientY
-        const startScrollX = this.gridContainer.scrollLeft
-        const startScrollY = this.gridContainer.scrollTop
-        return (e) => {
-          this.gridContainer.scrollLeft = startScrollX + startX - e.clientX
-          this.gridContainer.scrollTop = startScrollY + startY - e.clientY
-        }
-      },
-      onUp: (e) => {
-        this.gridContainer.style.cursor = ''
-      }
-    })
-
     this.grid.addEventListener('mousedown', (e) => {
       if (e.target !== e.currentTarget) {
         return
       }
       if (e.button === 0) {
         this.addNote(e)
-      } else if (e.button === 2) {
-        // this.addModulation(e)
       }
     })
 
@@ -188,52 +152,6 @@ export default class PianoRoll extends Component {
     this.grid.addEventListener('contextmenu', (e) => {
       e.preventDefault()
     })
-  }
-
-  private addModulation (e: MouseEvent) {
-    const { time, interval } = this.mouseToNote(
-        e.clientX, e.clientY, { openModulation: true })
-
-    const modulation = insertModulation(this.modulations, interval, time)
-
-    let modulationElem = find(this.modulationElements,
-        (elem) => elem.modulation.time === time)
-
-    if (!modulationElem) {
-      modulationElem = this.newComponent(PianoRollModulation, modulation, e)
-      this.modulationElements.add(modulationElem)
-      this.modulationContainer.append(modulationElem.element)
-    }
-
-    this.updateModulationPositions()
-    this.drawPitchLines()
-
-    // for (const block of this.blocks) {
-    //   const note = block.note
-    //   if (note.startTime < time) {
-    //     continue
-    //   }
-    //   const modulation = totalModulationAtTime(this.modulations, note.startTime)
-    //   const freq = 440 * modulation * note.interval.number * 2 ** note.octave
-    //   console.log(freq)
-    //   const pitch = frequencyToPitch(freq, 440, this.scale)
-    //   note.interval = pitch.interval
-    //   note.octave = pitch.octave
-    //
-    //   const x = this.timeToScreen(note.startTime)
-    //   const y = this.frequencyToScreen(440 * modulation * note.interval.number * 2 ** note.octave)
-    //   block.setPosition(x, y)
-    // }
-  }
-
-  private updateModulationPositions () {
-    for (const elem of this.modulationElements) {
-      const modulation = elem.modulation
-      const x = this.timeToScreen(modulation.time)
-      const y = this.frequencyToScreen(
-          440 * totalModulationAtTime(this.modulations, modulation.time))
-      elem.setPosition(x, y, this.octaveHeight, this.height)
-    }
   }
 
   // TODO: move to PianoRoll folder
@@ -311,18 +229,8 @@ const containerStyle = makeStyle({
 })
 
 const gridContainerStyle = makeStyle({
-  overflow: `auto`,
+  overflow: `scroll`,
   height: `100%`,
-})
-
-const modulationBarStyle = makeStyle({
-  position: `absolute`,
-  left: `0`,
-  right: `1rem`,
-  top: `0`,
-  height: `1rem`,
-  opacity: `0.5`,
-  background: `linear-gradient(to right, yellow, blue)`,
 })
 
 const svgStyle = makeStyle({

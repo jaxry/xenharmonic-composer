@@ -2,10 +2,11 @@ import { makeStyle } from '../../makeStyle'
 import colors from '../../colors'
 import createSVG from '../../createSVG'
 import PianoRoll from '../PianoRoll'
-import { numToPixel } from '../../../util'
+import { numToPixel, removeChildren } from '../../../util'
 
 export function drawBeatLines (pianoRoll: PianoRoll): SVGGElement {
-  const g = createSVG('g')
+  const g = pianoRoll.beatLines
+  removeChildren(g)
 
   const lines = pianoRoll.units * pianoRoll.beatsPerUnit
   for (let i = 0; i < lines; i++) {

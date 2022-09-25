@@ -1,8 +1,10 @@
 import Fraction from './Fraction'
 import { findClosest } from './util'
 
+export const IdentityInterval = new Fraction(1, 1)
+
 export const scale = [
-  new Fraction(1, 1),
+  IdentityInterval,
   new Fraction(16, 15),
   new Fraction(9, 8),
   new Fraction(6, 5),

@@ -8,11 +8,12 @@ import { Modulation } from '../../modulation'
 
 export default class PianoRollModulation extends Component {
   onDrag?: (block: this, x: number, y: number) => void
+  onRightClick?: (e: MouseEvent) => void
 
-  constructor (public modulation: Modulation, mouseEvent: MouseEvent) {
+  constructor (public modulation: Modulation) {
     super(createSVG('g'))
 
-    this.addDragBehavior(mouseEvent)
+    this.addMouseBehavior()
   }
 
   setPosition (
@@ -38,7 +39,7 @@ export default class PianoRollModulation extends Component {
     }
   }
 
-  private addDragBehavior (pointerEvent: MouseEvent) {
+  private addMouseBehavior () {
     makeDraggable(this.element, {
       onDown: (e) => {
         const rect = (e.target as Element).getBoundingClientRect()
@@ -47,7 +48,11 @@ export default class PianoRollModulation extends Component {
         return (e) => this.onDrag?.(
             this, e.clientX - mouseDiffX, e.clientY - mouseDiffY)
       },
-      startEnabled: pointerEvent,
+    })
+    this.element.addEventListener('mouseup', (e) => {
+      if ((e as MouseEvent).button === 2) {
+        this.onRightClick?.(e as MouseEvent)
+      }
     })
   }
 }

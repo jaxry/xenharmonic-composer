@@ -2,11 +2,12 @@ import { makeStyle } from '../../makeStyle'
 import colors from '../../colors'
 import createSVG from '../../createSVG'
 import PianoRoll from '../PianoRoll'
-import { numToPixel } from '../../../util'
+import { numToPixel, removeChildren } from '../../../util'
 import { modulateByInterval } from '../../../modulation'
 
 export function drawPitchLines (pianoRoll: PianoRoll): SVGGElement {
-  const g = createSVG('g')
+  const g = pianoRoll.pitchLines
+  removeChildren(g)
 
   let rootFreq = 440
   let currentTime = 0
