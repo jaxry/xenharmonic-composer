@@ -13,8 +13,8 @@ import { drawPitchLines } from './PianoRoll/drawPitchLines'
 import { drawBeatLines } from './PianoRoll/drawBeatLines'
 import { previewNote } from '../../playNotes'
 import { deleteBlockBehavior } from './PianoRoll/deleteBlockBehavior'
-import PianoRollModulationBar from './PianoRollModulationBar'
 import { panBehavior } from './PianoRoll/panBehavior'
+import { keyPressBehavior } from './PianoRoll/keyPressBehavior'
 
 /* TODO: New controls
   Have a bar at the bottom that clicking creates a modulation that you can drag around
@@ -30,10 +30,8 @@ export default class PianoRoll extends Component {
   blockContainer = createSVG('g')
   modulationContainer = createSVG('g')
 
-  modulationBar: PianoRollModulationBar
-
   blockElementToBlock = new WeakMap<Element, PianoRollBlock>()
-  modulationElements = new Map<Modulation, PianoRollModulation>()
+  modulationElements = new Set<PianoRollModulation>()
 
   units = 16
   beatsPerUnit = 4
@@ -76,12 +74,10 @@ export default class PianoRoll extends Component {
     this.grid.append(this.blockContainer)
     this.grid.append(this.modulationContainer)
 
-    this.modulationBar = this.newComponent(PianoRollModulationBar, this)
-    this.element.append(this.modulationBar.element)
-
     this.addMouseBehavior()
     panBehavior(this)
     deleteBlockBehavior(this)
+    keyPressBehavior(this)
 
     drawPitchLines(this)
     drawBeatLines(this)

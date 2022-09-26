@@ -8,7 +8,8 @@ export interface Modulation {
 
 export function modulateByInterval (ratio: number, interval: Fraction) {
   ratio *= interval.number
-  return ratio / 2 ** Math.floor(Math.log2(ratio * Math.SQRT2))
+  // return ratio / 2 ** Math.floor(Math.log2(ratio * Math.SQRT2))
+  return ratio
 }
 
 export function totalModulationAtTime (
@@ -22,7 +23,9 @@ export function totalModulationAtTime (
     total *= modulation.interval.number
   }
 
-  return total / 2 ** Math.floor(Math.log2(total * Math.SQRT2))
+  // return total / 2 ** Math.floor(Math.log2(total * Math.SQRT2))
+  return total
+
 }
 
 export function insertModulation (
