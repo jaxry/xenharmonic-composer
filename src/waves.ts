@@ -1,9 +1,9 @@
 function makeWave (waveFn: (x: number) => number) {
-  const length = 64
+  const sampleRate = 44100
 
   const buffer = new AudioBuffer({
-    length,
-    sampleRate: length * 440,
+    length: Math.round(sampleRate / 440),
+    sampleRate,
   })
 
   const d = buffer.getChannelData(0)

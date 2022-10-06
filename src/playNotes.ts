@@ -1,4 +1,4 @@
-import { squareWave } from './waves'
+import { sawWave, squareWave, triangleWave } from './waves'
 import { audioContext } from './audioContext'
 import { Note } from './Note'
 import { Modulation, totalModulationAtTime } from './modulation'
@@ -30,7 +30,7 @@ function playNote (note: Note, currentTime: number, modulation: number) {
 
   const noteTime = currentTime + note.startTime
 
-  src.start(noteTime)
+  src.start(noteTime, Math.random() * src.buffer.length / src.buffer.sampleRate)
 
   gain.gain.setValueAtTime(0, noteTime)
   gain.gain.linearRampToValueAtTime(0.1, noteTime + 0.01)

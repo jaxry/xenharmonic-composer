@@ -1,22 +1,32 @@
 import Fraction from './Fraction'
 import { findClosest } from './util'
 
-export const IdentityInterval = new Fraction(1, 1)
-
 export const scale = [
-  IdentityInterval,
-  new Fraction(16, 15),
-  new Fraction(9, 8),
-  new Fraction(6, 5),
-  new Fraction(5, 4),
-  new Fraction(4, 3),
-  new Fraction(45, 32),
-  new Fraction(3, 2),
-  new Fraction(8, 5),
-  new Fraction(5, 3),
-  new Fraction(9, 5),
-  new Fraction(15, 8),
+    new Fraction(3, 1),
+    new Fraction(3*3, 1),
+    new Fraction(5, 1),
+    new Fraction(3*5, 1),
+    new Fraction(5*3*3, 1),
+    new Fraction(5, 3),
 ]
+
+const inverses = scale.map(interval => {
+  return new Fraction(interval.denominator, interval.numerator)
+})
+scale.push(...inverses)
+
+for (const interval of scale) {
+  const twos = Math.floor(Math.log2(interval.number))
+  if (twos > 0) {
+    interval.denominator *= 2 ** twos
+  } else {
+    interval.numerator *= 2 ** -twos
+  }
+}
+
+scale.push(new Fraction(1, 1))
+
+scale.sort((a, b) => a.number - b.number)
 
 export function frequencyToPitch (
     scale: Fraction[], rootFrequency: number, frequency: number) {

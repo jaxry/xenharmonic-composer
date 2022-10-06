@@ -48,14 +48,6 @@ export default class PianoRollModulation extends Component {
   }
 }
 
-const textStyle = makeStyle({
-  fontWeight: 'bold',
-  fontSize: '1rem',
-  fill: colors.green[600],
-  textAnchor: 'middle',
-  dominantBaseline: 'central',
-})
-
 const circleStyle = makeStyle({
   fill: colors.yellow[300],
   cursor: `move`,
