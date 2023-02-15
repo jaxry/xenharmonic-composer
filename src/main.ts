@@ -1,55 +1,41 @@
 import { audioContext } from './audioContext'
-import { sawWave } from './waves'
+import Phrase from './Phrase'
+import Instrument from './Instrument'
 
-function play (pitch: number, time: number) {
-  const src = audioContext.createBufferSource()
-  src.buffer = sawWave
-  src.loop = true
-  src.playbackRate.value = 2 ** (pitch / 12)
+// let currentTime = 0
+// const tempoVariation = [0]
+// const stepsPerUnit = 4
+// const timePerStep = 1 / stepsPerUnit
+// for (let i = 1; i < 16 * stepsPerUnit; i++) {
+//   currentTime += timePerStep
+//   tempoVariation.push(currentTime)
+// }
 
-  const gain = audioContext.createGain()
-  gain.gain.value = 0
-  src.connect(gain).connect(audioContext.destination)
+const inst = new Instrument()
 
-  const noteTime = time
-
-  src.start(noteTime, Math.random() * src.buffer.length / src.buffer.sampleRate)
-
-  gain.gain.setValueAtTime(0, noteTime)
-  gain.gain.linearRampToValueAtTime(0.1, noteTime + 0.005)
-
-  const endTime = noteTime + 0.02
-
-  gain.gain.setTargetAtTime(0, endTime, 0.4)
-  src.stop(endTime + 0.4 * 5)
-}
-
-const notes = [0, 4, 7, 4, 7, 4, 0, 4]
+const melody = new Phrase(`0 7 4 7 0 7 4 -2 -3 5 0 5 -2 5 2 -2`)
+const bass = new Phrase(`0 -2 -7 -2`)
+    .extendDuration(2).octaveShift(-3).duplicateEach(2)
 
 const song = [
-  { notes, transpose: 0 },
-  { notes, transpose: -2 },
-  { notes, transpose: -4 },
-  { notes, transpose: -5 },
-  { notes, transpose: -7 },
-  { notes, transpose: -9 },
-  { notes, transpose: -5 },
-  { notes, transpose: -5 },
+  melody,
+  // bass
 ]
 
-function playSong () {
+function playSong (song: Phrase[]) {
   const startTime = audioContext.currentTime
-  let time = 0
-  for (const { notes, transpose } of song) {
-    for (const note of notes) {
-      play(note + transpose, startTime + time)
-      time += 0.4
+  for (const phrase of song) {
+    let time = 0
+    for (const note of phrase.notes) {
+      const t = Math.max(0, time + (Math.random() - 0.5) * 0.05)
+      inst.play(startTime + t * 0.4, note)
+      time += note.duration
     }
   }
-
 }
 
 window.addEventListener('click', () => {
-  playSong()
+  playSong(song)
 })
-// playSong()
+
+// TODO: start phrase on the note of another phrase
