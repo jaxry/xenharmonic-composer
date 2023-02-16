@@ -91,7 +91,7 @@ export function getAndDelete<T, U> (map: Map<T, U>, key: T): U | undefined {
   return value
 }
 
-export function makeOrGet<T, U> (map: Map<T, U>, key: T, makeFn: () => U) {
+export function getOrMake<T, U> (map: Map<T, U>, key: T, makeFn: () => U) {
   if (!map.has(key)) {
     map.set(key, makeFn())
   }

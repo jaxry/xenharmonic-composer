@@ -1,5 +1,6 @@
 import { copyObject } from './util'
 import Note from './Note'
+import Instrument from './Instrument'
 
 export default class Phrase {
   notes: Note[]
@@ -8,6 +9,10 @@ export default class Phrase {
     if (phraseString) {
       this.notes = convert(phraseString)
     }
+  }
+
+  instrument (instrument: Instrument) {
+    return this.copyModify(note => note.instrument = instrument)
   }
 
   octaveShift (shift: number) {
@@ -22,13 +27,13 @@ export default class Phrase {
     return this.copy(note => Array(count).fill(note))
   }
 
-  private copy (map: (note: Note) => Note | Note[]) {
+  protected copy (map: (note: Note) => Note | Note[]) {
     const copy = new Phrase()
     copy.notes = this.notes.flatMap(map)
     return copy
   }
 
-  private copyModify (modifier: (note: Note) => void) {
+  protected copyModify (modifier: (note: Note) => void) {
     const copy = new Phrase()
     copy.notes = this.notes.map(note => {
       const copy = copyObject(note)
